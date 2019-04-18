@@ -1,2 +1,2 @@
-# news-reading-publics
+# News Reading Publics
 Codebase for my dissertation research
