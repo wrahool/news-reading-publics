@@ -5,6 +5,7 @@ setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Projec
 library(igraph)
 library(ggplot2)
 library(gridExtra)
+library(ggpubr)
 
 load("04_RData/01_networks.RData")
 load("04_RData/02_induced_networks.RData")
@@ -145,19 +146,22 @@ media.breakdown$X = NULL
 avg.dc.pr.full.df = merge(avg.dc.pr.df, media.breakdown, by.x = "Media", by.y = "Media")
 #avg.dc.pr.full.df$LegacySocial = paste(avg.dc.pr.full.df$Legacy, avg.dc.pr.full.df$Social, sep = "")
 
+
+
+#These next few lines are no longer needed as we have earlier filtered out all non-relevant outlets
 #only get outlets that are NEWS, NOT SOCIAL, NOT FISHY, and NOT CONGLOMERATES
 #also mandatorily keep The Times Of India Sites
-reqd.media = avg.dc.pr.full.df[(avg.dc.pr.full.df$News == "Y" &
-                                 avg.dc.pr.full.df$Social == "N" & 
-                                 avg.dc.pr.full.df$Fishy == "N" &
-                                 avg.dc.pr.full.df$Group == "N") |
-                                 avg.dc.pr.full.df$Media == "The Times Of India Sites",]
+# reqd.media = avg.dc.pr.full.df[(avg.dc.pr.full.df$News == "Y" &
+#                                  avg.dc.pr.full.df$Social == "N" & 
+#                                  avg.dc.pr.full.df$Fishy == "N" &
+#                                  avg.dc.pr.full.df$Group == "N") |
+#                                  avg.dc.pr.full.df$Media == "The Times Of India Sites",]
 
 #viz Indian vs Foreign
 
-viz.df = reqd.media[!is.na(reqd.media$Indian),]
+viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$Indian),]
 
-ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Indian)) + 
+Indian_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Indian)) + 
   geom_point(size = 2, shape = 16) +
   scale_color_brewer(palette="Dark2") +
   labs(x = "log of degree centrality", y = "log of percentage reach")
@@ -168,27 +172,31 @@ ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Indian)) +
 #  scale_color_brewer(palette="Dark2") +
 #  labs(x = "log of degree centrality", y = "log of percentage reach")
 
-viz.df = reqd.media[!is.na(reqd.media$English),]
+viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$English),]
 
-ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=English)) + 
+English_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=English)) + 
   geom_point(size = 2, shape = 16) +
   scale_color_brewer(palette="Set1") +
   labs(x = "log of degree centrality", y = "log of percentage reach")
 
-viz.df = reqd.media[!is.na(reqd.media$Regional),]
+viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$Regional),]
 
-ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Regional)) + 
+Regional_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Regional)) + 
   geom_point(size = 2) + 
   scale_color_brewer(palette="Set2") +
   labs(x = "log of degree centrality", y = "log of percentage reach")
 
 
-viz.df = reqd.media[!is.na(reqd.media$Digital),]
+viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$Digital),]
 
-ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Digital)) + 
+Digital_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Digital)) + 
   geom_point(size = 2, shape = 16) +
   scale_color_brewer(palette="Set1") +
   labs(x = "log of degree centrality", y = "log of percentage reach")
+
+ggarrange(Indian_p, Regional_p, English_p, Digital_p, 
+          labels = c("A", "B", "C", "D"),
+          ncol = 2, nrow = 2)
 
 #digital x Indian
 
@@ -219,3 +227,10 @@ grid.arrange(g1, g2, nrow = 2)
 write.csv(dc_pr.full.df, "03_Auxiliary/dc_pr_full.csv", row.names = F)
 write.csv(avg.dc.pr.full.df, "03_Auxiliary/avg_dc_pr_full.csv", row.names = F)
 
+######################
+
+head(KM.master.df)
+agg.KM.df = aggregate(KM.master.df$UV, by = list(KM.master.df$Media), FUN = mean)
+names(agg.KM.df) = c("Media", "avg.UV")
+agg.KM.df = agg.KM.df[order(-agg.KM.df$avg.UV),]
+rownames(agg.KM.df) = NULL

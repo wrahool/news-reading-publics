@@ -69,7 +69,12 @@ for(i in 2:length(graphs_list))
 #add Times of India to this list. NOTE: October 2014 does not have Times of India.
 commonNodes = c(commonNodes, "The Times Of India Sites")
 
-#extract induced subgraph with only the common nodes
+media.breakdown = read.csv("03_Auxiliary/media_breakdown.csv", as.is = T)
+
+commonNodes = intersect(commonNodes, media.breakdown[media.breakdown$Relevant == "Y",]$Media)
+
+
+#extract induced subgraph with only the common nodes that are relevant
 #iterate over the graphs_list, get the induced subgraph and store it in a new list
 #red_graphs_list (reduced graphs list)
 red_graphs_list = vector("list", length(graphs_list))

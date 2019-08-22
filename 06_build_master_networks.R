@@ -16,11 +16,14 @@ load("04_RData/03_filtered_networks.RData")
 
 media.breakdown = read.csv("03_Auxiliary/media_breakdown.csv", as.is = T)
 
-reqd.media = media.breakdown[(media.breakdown$News == "Y" &
-                               media.breakdown$Social == "N" & 
-                               media.breakdown$Fishy == "N" &
-                               media.breakdown$Group == "N") |
-                               media.breakdown$Media == "The Times Of India Sites",]$Media
+# reqd.media = media.breakdown[(media.breakdown$News == "Y" &
+#                                media.breakdown$Social == "N" & 
+#                                media.breakdown$Fishy == "N" &
+#                                media.breakdown$Group == "N") |
+#                                media.breakdown$Media == "The Times Of India Sites" |
+#                                media.breakdown$Media == "The Hindu Group",]$Media
+
+reqd.media = media.breakdown[media.breakdown$Relevant == "Y",]$Media
 
 red_graphs_list2 = vector("list", length(red_graphs_list))
 

@@ -1,3 +1,6 @@
+#SKIP
+
+
 #setwd("C:\\Users\\Subhayan\\Documents\\Python Workspace\\India")
 rm(list=ls())
 

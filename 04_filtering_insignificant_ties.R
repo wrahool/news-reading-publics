@@ -11,10 +11,7 @@ load("04_RData/02_induced_networks.RData")
 
 media.breakdown = read.csv("03_Auxiliary/media_breakdown.csv", as.is = T)
 
-reqd.media = media.breakdown[media.breakdown$News == "Y" &
-                               media.breakdown$Social == "N" & 
-                               media.breakdown$Fishy == "N" &
-                               media.breakdown$Group == "N",]$Media
+reqd.media = media.breakdown[media.breakdown$Relevant == "Y",]$Media
 
 red_graphs_list2 = vector("list", length(red_graphs_list))
 
@@ -111,7 +108,9 @@ ec_p = ggplot(central.df2, aes(x = before.after, y = eigen.centr)) +
         geom_boxplot() +
         labs(x = "", y = "eigenvector centrality")
 
-grid.arrange(dc_p, bc_p, cc_p, ec_p, nrow = 1)
+ggarrange(dc_p, bc_p, cc_p, ec_p, 
+          labels = c("A", "B", "C", "D"),
+          ncol = 2, nrow = 2)
 
 write.csv(central.df, "03_Auxiliary/centralization_before_after.csv", row.names = F)
 
