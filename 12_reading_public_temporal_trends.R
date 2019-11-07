@@ -57,7 +57,7 @@ ggplot(trends_tbl,aes(y = MeanPC,x = n,color = Community)) +
              linetype = "dotted") +
   theme_classic() +
   theme(axis.text.x = element_blank(),
-        axis.ticks = element_blank()) +
+        axis.ticks.x = element_blank()) +
   theme(legend.position = "none")
 
 # slopes of meanPC vs n for each community
@@ -129,14 +129,14 @@ ggplot(trends_tbl,aes(y = MeanPC,x = n,color = Community)) +
              linetype = "dotted") +
   theme_classic() +
   theme(axis.text.x = element_blank(),
-        axis.ticks = element_blank()) +
+        axis.ticks.x = element_blank()) +
   theme(legend.position = "none")
 
-# without C2
+# without C12-15
 trends_tbl %>% 
-  filter(Community != "C_2") -> trends_tbl_withoutC2
+  filter(!Community %in% c("C_12", "C_13", "C_14", "C_15")) -> trends_tbl_withoutC1215
 
-ggplot(trends_tbl_withoutC2,aes(y = MeanPC,x = n,color = Community)) + 
+ggplot(trends_tbl_withoutC1215, aes(y = MeanPC,x = n,color = Community)) + 
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x) +
   geom_dl(aes(label = gsub("C_", "", Community)),
