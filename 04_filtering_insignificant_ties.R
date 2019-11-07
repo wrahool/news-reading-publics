@@ -115,3 +115,150 @@ ggarrange(dc_p, bc_p, cc_p, ec_p,
 write.csv(central.df, "03_Auxiliary/centralization_before_after.csv", row.names = F)
 
 save(filtered_graphs_list, file = "04_RData/03_filtered_networks.RData")
+
+#compare network stats after thresholding with those of the original networks
+
+library(ggplot2)
+library(ggpubr)
+library(igraph)
+
+load("04_RData/01_networks.RData")
+load("04_RData/02_induced_networks.RData")
+load("04_RData/03_filtered_networks.RData")
+
+months = read.csv("03_Auxiliary/months.csv", as.is = T)
+
+months = months$months
+
+compare.df = NULL
+
+for(i in 1:45) {
+  month = months[i]
+  
+  v_c1 = vcount(graphs_list[[i]])
+  v_c2 = vcount(red_graphs_list[[i]])
+  v_c3 = vcount(filtered_graphs_list[[i]])
+  
+  e_c1 = ecount(graphs_list[[i]])
+  e_c2 = ecount(red_graphs_list[[i]])
+  e_c3 = ecount(filtered_graphs_list[[i]])
+  
+  mean_d1 = mean(degree(graphs_list[[i]],mode="all"))
+  mean_d2 = mean(degree(red_graphs_list[[i]],mode="all"))
+  mean_d3 = mean(degree(filtered_graphs_list[[i]],mode="all"))
+  
+  sd1 = sd(degree(graphs_list[[i]],mode="all"))
+  sd2 = sd(degree(red_graphs_list[[i]],mode="all"))
+  sd3 = sd(degree(filtered_graphs_list[[i]],mode="all"))
+  
+  mean_sa1 = mean(E(graphs_list[[i]])$shared_audience)
+  mean_sa2 = mean(E(red_graphs_list[[i]])$shared_audience)
+  mean_sa3 = mean(E(filtered_graphs_list[[i]])$shared_audience)
+  
+  sd_sa1 = sd(E(graphs_list[[i]])$shared_audience)
+  sd_sa2 = sd(E(red_graphs_list[[i]])$shared_audience)
+  sd_sa3 = sd(E(filtered_graphs_list[[i]])$shared_audience)
+  
+  dc1 = centr_degree(graphs_list[[i]],mode="all")$centralization
+  dc2 = centr_degree(red_graphs_list[[i]],mode="all")$centralization
+  dc3 = centr_degree(filtered_graphs_list[[i]],mode="all")$centralization
+  
+  bc1 = centr_betw(graphs_list[[i]])$centralization
+  bc2 = centr_betw(red_graphs_list[[i]])$centralization
+  bc3 = centr_betw(filtered_graphs_list[[i]])$centralization
+  
+  cc1 = centr_clo(graphs_list[[i]])$centralization
+  cc2 = centr_clo(red_graphs_list[[i]])$centralization
+  cc3 = centr_clo(filtered_graphs_list[[i]])$centralization
+  
+  ec1 = centr_eigen(graphs_list[[i]])$centralization
+  ec2 = centr_eigen(red_graphs_list[[i]])$centralization
+  ec3 = centr_eigen(filtered_graphs_list[[i]])$centralization
+  
+  d1 = edge_density(graphs_list[[i]])
+  d2 = edge_density(red_graphs_list[[i]])
+  d3 = edge_density(filtered_graphs_list[[i]])
+  
+  month_row_raw = c(month, "raw", v_c1, e_c1, mean_d1, sd1, mean_sa1, sd_sa1,
+                        dc1, bc1, cc1, ec1, d1)
+  month_row_induced  = c(month, "induced", v_c2, e_c2, mean_d2, sd2, mean_sa2, sd_sa2,
+                       dc2, bc2, cc2, ec2, d2)
+  
+  month_row_filtered  = c(month, "filtered", v_c3, e_c3, mean_d3, sd3, mean_sa3, sd_sa3,
+                       dc3, bc3, cc3, ec3, d3)
+  
+  compare.df = rbind(compare.df, month_row_raw, month_row_induced, month_row_filtered)
+}
+
+compare.df = data.frame(compare.df, row.names = NULL)
+names(compare.df) = c("month","before.after", "vertex_count", "edge_count",
+                      "mean_degree", "stdev_degree", "mean_shad", "stdev_shad",
+                      "DC", "BC", "CC", "EC", "density")
+
+
+compare.df$month = as.character(compare.df$month)
+
+compare.df$before.after = factor(compare.df$before.after,
+                       levels = c('raw','induced', 'filtered'),ordered = TRUE)
+
+compare.df$vertex_count = as.numeric(as.character(compare.df$vertex_count))
+compare.df$edge_count = as.numeric(as.character(compare.df$edge_count))
+compare.df$mean_degree = as.numeric(as.character(compare.df$mean_degree))
+compare.df$stdev_degree = as.numeric(as.character(compare.df$stdev_degree))
+compare.df$mean_shad = as.numeric(as.character(compare.df$mean_shad))
+compare.df$stdev_shad = as.numeric(as.character(compare.df$stdev_shad))
+compare.df$DC = as.numeric(as.character(compare.df$DC))
+compare.df$BC = as.numeric(as.character(compare.df$BC))
+compare.df$CC = as.numeric(as.character(compare.df$CC))
+compare.df$EC = as.numeric(as.character(compare.df$EC))
+compare.df$density = as.numeric(as.character(compare.df$density))
+
+
+e_p = ggplot(compare.df, aes(x = before.after, y = edge_count, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "number of edges") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+md_p = ggplot(compare.df, aes(x = before.after, y = mean_degree, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "mean degree") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+sd_p = ggplot(compare.df, aes(x = before.after, y = stdev_degree, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "std. dev. of degree") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+msa_p = ggplot(compare.df, aes(x = before.after, y = mean_shad, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "mean shared audience") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+sdsa_p = ggplot(compare.df, aes(x = before.after, y = mean_shad, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "std. dev. of shared audience") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+dc_p = ggplot(compare.df, aes(x = before.after, y = DC, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "degree centralization") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+bc_p = ggplot(compare.df, aes(x = before.after, y = BC, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "betweenness centralization") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+cc_p = ggplot(compare.df, aes(x = before.after, y = CC, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "closeness centralization") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+ec_p = ggplot(compare.df, aes(x = before.after, y = EC, fill = before.after)) + 
+  geom_boxplot() +
+  labs(x = "", y = "eigenvector centralization") +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) + theme_minimal() + theme(legend.position="none")
+
+ggarrange(e_p, md_p, sd_p, msa_p, sdsa_p, dc_p, bc_p, cc_p, ec_p, 
+          labels = toupper(letters)[1:9],
+          ncol = 3, nrow = 3)

@@ -28,6 +28,8 @@ get.edge.wt.communities = function(g, c1, c2) {
 set.seed(42)
 WT = cluster_walktrap(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
 
+save(WT, file = "04_RData/WT.Rdata")
+
 comm_list = vector("list", length(WT))
 for(i in 1:length(WT)) {
   node.ids = unlist(lapply(WT[[i]], FUN = function(x) {which(x == V(filtered.master.g)$name)}))
@@ -66,6 +68,8 @@ for(v in V(g)$name) {
 set.seed(42)
 WT2 = cluster_walktrap(g, weights = E(g)$shared_audience)
 
+save(WT2, file = "04_RData/WT2.Rdata")
+
 #build community network
 
 #regular Walktrap
@@ -102,5 +106,5 @@ for(i in 1:length(WT2)) {
 
 options(scipen=999)
 
-write.csv(comm_g1_EL, "simple_WT_community_network.csv", row.names = F)
-write.csv(comm_g2_EL, "resolution_WT_community_network.csv", row.names = F)
+write.csv(comm_g1_EL, "03_Auxiliary/simple_WT_community_network.csv", row.names = F)
+write.csv(comm_g2_EL, "03_Auxiliary/resolution_WT_community_network.csv", row.names = F)

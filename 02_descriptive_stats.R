@@ -47,6 +47,8 @@ m$sd.xvisiting = as.numeric(as.character(m$sd.xvisiting))
 m$centralization = as.numeric(as.character(m$centralization))
 m$density = as.numeric(as.character(m$density))
 
+library(ggplot2)
+library(ggpubr)
 
 #boxplots to visualize the distributions of the network parameters
 if (visualize) {
@@ -59,6 +61,19 @@ if (visualize) {
   boxplot(m$sd.xvisiting)
   boxplot(m$centralization)
   boxplot(m$density)
+  
+  nodes_p = ggplot(data = m, aes(y=nodes)) + geom_boxplot()
+  edges_p = ggplot(data = m, aes(y=edges)) + geom_boxplot()
+  md_p = ggplot(data = m, aes(y=mean.degree)) + geom_boxplot()
+  sd_p = ggplot(data = m, aes(y=sd.degree)) + geom_boxplot()
+  mv_p = ggplot(data = m, aes(y=mean.xvisiting)) + geom_boxplot()
+  sdv_p = ggplot(data = m, aes(y=sd.xvisiting)) + geom_boxplot()
+  c_p = ggplot(data = m, aes(y=centralization)) + geom_boxplot()
+  d_p = ggplot(data = m, aes(y=density)) + geom_boxplot()
+  
+  ggarrange(nodes_p, edges_p, md_p, sd_p, mv_p, sdv_p, c_p, d_p, 
+            labels = c("A", "B", "C", "D", "E", "F", "G", "H"),
+            ncol = 4, nrow = 2)
 }
   
 #which nodes exists in all the networks?
@@ -118,6 +133,21 @@ red.m$mean.xvisiting = as.numeric(as.character(red.m$mean.xvisiting))
 red.m$sd.xvisiting = as.numeric(as.character(red.m$sd.xvisiting))
 red.m$centralization = as.numeric(as.character(red.m$centralization))
 red.m$density = as.numeric(as.character(red.m$density))
+
+
+rnodes_p = ggplot(data = red.m, aes(y=nodes)) + geom_boxplot()
+redges_p = ggplot(data = red.m, aes(y=edges)) + geom_boxplot()
+rmd_p = ggplot(data = red.m, aes(y=mean.degree)) + geom_boxplot()
+rsd_p = ggplot(data = red.m, aes(y=sd.degree)) + geom_boxplot()
+rmv_p = ggplot(data = red.m, aes(y=mean.xvisiting)) + geom_boxplot()
+rsdv_p = ggplot(data = red.m, aes(y=sd.xvisiting)) + geom_boxplot()
+rc_p = ggplot(data = red.m, aes(y=centralization)) + geom_boxplot()
+rd_p = ggplot(data = red.m, aes(y=density)) + geom_boxplot()
+
+ggarrange(rnodes_p, redges_p, rmd_p, rsd_p, rmv_p, rsdv_p, rc_p, rd_p, 
+          labels = c("A", "B", "C", "D", "E", "F", "G", "H"),
+          ncol = 4, nrow = 2)
+
 
 write.csv(m, "03_Auxiliary/raw_network_stats.csv", row.names = F)
 write.csv(red.m, "03_Auxiliary/induced_network_stats.csv", row.names = F)

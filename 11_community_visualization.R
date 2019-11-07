@@ -2,6 +2,10 @@ rm(list=ls())
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
+##################################
+# Prepare data for visualization #
+##################################
+
 KM.master.df = read.csv("03_Auxiliary/km_master.csv", as.is = T)
 all.media.breakdown = read.csv("03_Auxiliary/common_media_breakdown.csv", as.is = T)
 
@@ -9,8 +13,8 @@ all.media.breakdown = read.csv("03_Auxiliary/common_media_breakdown.csv", as.is 
 load("04_RData/WT.Rdata")
 
 res_df = NULL
-for(i in 1:length(WT)) {
-  outlets = WT[[i]]
+for(i in 1:max(WT$membership)) {
+  outlets = WT$names[WT$membership == i]
   n_outlets = length(outlets)
   km = KM.master.df[KM.master.df$Media %in% outlets,]
   mean_pc = mean(tapply(km$PercentReach, km$Media, mean))
@@ -42,8 +46,8 @@ write.csv(res_df, "03_Auxiliary/simple_walktrap_community_features.csv", row.nam
 load("04_RData/WT2.Rdata")
 
 res_df = NULL
-for(i in 1:length(WT2)) {
-  outlets = WT2[[i]]
+for(i in 1:max(WT2$membership)) {
+  outlets = WT2$names[WT2$membership == i]
   n_outlets = length(outlets)
   km = KM.master.df[KM.master.df$Media %in% outlets,]
   mean_pc = mean(tapply(km$PercentReach, km$Media, mean))
@@ -70,3 +74,102 @@ for(i in 1:length(WT2)) {
 names(res_df) = c("comm", "n", "mean_pc", "mean_UV", "reg_percent", "dig_percent", "ver_percent", "ind_percent", "ling_div")
 
 write.csv(res_df, "03_Auxiliary/resolution_walktrap_community_features.csv", row.names = F)
+
+##################################
+#          visualization         #
+##################################
+library(igraph)
+
+#regular WT
+
+# nodes = read.csv("03_Auxiliary/simple_walktrap_community_features.csv", as.is = TRUE)
+# links = read.csv("03_Auxiliary/simple_WT_community_network.csv", as.is = TRUE)
+
+type = "simple"
+
+nodes = read.csv(paste0("03_Auxiliary/", type,"_walktrap_community_features.csv"), as.is = TRUE)
+links = read.csv(paste0("03_Auxiliary/", type,"_WT_community_network.csv"), as.is = TRUE)
+
+
+names(links)[1:2] = c("from", "to")
+
+net = graph_from_data_frame(d=links, vertices=nodes, directed=F) 
+
+V(net)$size <- V(net)$n * 0.7
+E(net)$width <- E(net)$weight/60000
+
+colfunc <- colorRampPalette(c("orangered", "orangered4"))
+V(net)$color <- colfunc(11)[round(V(net)$mean_UV * 10 / max(V(net)$mean_UV))+1]
+
+# l <- layout_with_fr(net)
+load("03_Auxiliary/simple_WT_layout.Rdata")
+
+plot(net, edge.arrow.size=.2,
+     # edge.color="black",
+     vertex.frame.color="#ffffff",
+     #vertex.label=V(net)$comm,
+     vertex.label=NA,
+     vertex.label.color="black",
+     layout = l) 
+
+#save(l, file = "03_Auxiliary/simple_WT_layout.Rdata")
+
+##################################
+library(igraph)
+type = "resolution"
+
+nodes = read.csv(paste0("03_Auxiliary/", type,"_walktrap_community_features.csv"), as.is = TRUE)
+links = read.csv(paste0("03_Auxiliary/", type,"_WT_community_network.csv"), as.is = TRUE)
+
+names(links)[1:2] = c("from", "to")
+
+net = graph_from_data_frame(d=links, vertices=nodes, directed=F) 
+
+V(net)$size <- V(net)$n * 0.7
+E(net)$width <- E(net)$weight/100000
+
+colfunc <- colorRampPalette(c("orangered", "orangered4"))
+V(net)$color <- colfunc(16)[round(V(net)$mean_UV * 10 / max(V(net)$mean_UV))+1]
+
+l <- layout_with_fr(net)
+load("03_Auxiliary/resolution_WT_layout.Rdata")
+
+l <- norm_coords(l, ymin=-0.089, ymax=0.085, xmin=-0.1, xmax=0.1)
+
+#par(mfrow=c(2,2), mar=c(0,0,0,0))
+dev.off()
+# dev.new()
+
+plot(net, edge.arrow.size=.2,
+     # edge.color="black",
+     vertex.frame.color="#ffffff",
+     # vertex.label=V(net)$comm,
+     vertex.label=NA,
+     vertex.label.color="black",
+     layout = l*15,
+     rescale = FALSE) 
+
+#save(l, file = "03_Auxiliary/resolution_WT_layout.Rdata")
+
+# core only
+dev.off()
+core_vertices = c(1:8, 11)
+net_core = induced_subgraph(net, vids = core_vertices)
+
+core_l = l[core_vertices,]
+core_l <- norm_coords(core_l, ymin=-0.2, ymax=0.2, xmin=-0.2, xmax=0.2)
+
+V(net_core)$size <- V(net_core)$n
+
+core_l[3,1] = 0.022
+core_l[3,2] = 0.0045
+
+# dev.new()
+plot(net_core, edge.arrow.size=.2,
+     # edge.color="black",
+     vertex.frame.color="#ffffff",
+     # vertex.label=V(net)$comm,
+     vertex.label=NA,
+     vertex.label.color="black",
+     layout = core_l*15,
+     rescale = TRUE) 

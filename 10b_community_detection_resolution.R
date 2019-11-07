@@ -52,7 +52,7 @@ save(WT2, file = "03_Auxiliary/communities.RData")
 
 #multi level
 
-i = 3
+i = 15
 WT2[[i]]
 node_ids = which(WT2$membership == i)
 V(g)$name[which(WT2$membership == i)]
