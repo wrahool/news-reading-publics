@@ -84,23 +84,6 @@ ggplot(community_digital_trends, aes(x=n, y=MeanPO, color = Type)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# # A tibble: 90 x 5
-# # Groups:   C, n, Month [45]
-# C     n Month        Type         MeanPO
-# <dbl> <dbl> <chr>        <chr>         <dbl>
-#   1     1     1 October2014  Digital-born   2.46
-#   2     1     1 October2014  Legacy         3.09
-#   3     1     2 November2014 Digital-born   1.60
-#   4     1     2 November2014 Legacy         2.47
-#   5     1     3 December2014 Digital-born   1.81
-#   6     1     3 December2014 Legacy         3.07
-#   7     1     4 January2015  Digital-born   1.38
-#   8     1     4 January2015  Legacy         1.94
-#   9     1     5 February2015 Digital-born   2.10
-#  10     1     5 February2015 Legacy         2.60
-# # ... with 80 more rows
-
-
 community_digital_tbl %>%
   group_by(n, Month, C, Type) %>%
   summarize(MeanPO = mean(PercentOveralap)) %>%
