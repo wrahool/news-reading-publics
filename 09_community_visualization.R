@@ -107,12 +107,12 @@ load("03_Auxiliary/simple_WT_layout.Rdata")
 plot(net, edge.arrow.size=.2,
      # edge.color="black",
      vertex.frame.color="#ffffff",
-     #vertex.label=V(net)$comm,
-     vertex.label=NA,
+     vertex.label=V(net)$comm,
+     #vertex.label=NA,
      vertex.label.color="black",
      layout = l) 
 
-#save(l, file = "03_Auxiliary/simple_WT_layout.Rdata")
+# save(l, file = "03_Auxiliary/simple_WT_layout.Rdata")
 
 ##################################
 library(igraph)
@@ -131,10 +131,10 @@ E(net)$width <- E(net)$weight/100000
 colfunc <- colorRampPalette(c("orangered", "orangered4"))
 V(net)$color <- colfunc(16)[round(V(net)$mean_UV * 10 / max(V(net)$mean_UV))+1]
 
-l <- layout_with_fr(net)
+#l <- layout_with_fr(net)
 load("03_Auxiliary/resolution_WT_layout.Rdata")
 
-l <- norm_coords(l, ymin=-0.089, ymax=0.085, xmin=-0.1, xmax=0.1)
+l <- norm_coords(l, ymin=-0.07, ymax=0.07, xmin=-0.1, xmax=0.1)
 
 #par(mfrow=c(2,2), mar=c(0,0,0,0))
 dev.off()
@@ -143,8 +143,8 @@ dev.off()
 plot(net, edge.arrow.size=.2,
      # edge.color="black",
      vertex.frame.color="#ffffff",
-     # vertex.label=V(net)$comm,
-     vertex.label=NA,
+    vertex.label=V(net)$comm,
+     #vertex.label=NA,
      vertex.label.color="black",
      layout = l*15,
      rescale = FALSE) 
@@ -153,7 +153,7 @@ plot(net, edge.arrow.size=.2,
 
 # core only
 dev.off()
-core_vertices = c(1:8, 11)
+core_vertices = c(1:4, 6:8)
 net_core = induced_subgraph(net, vids = core_vertices)
 
 core_l = l[core_vertices,]
@@ -161,14 +161,14 @@ core_l <- norm_coords(core_l, ymin=-0.2, ymax=0.2, xmin=-0.2, xmax=0.2)
 
 V(net_core)$size <- V(net_core)$n
 
-core_l[3,1] = 0.022
-core_l[3,2] = 0.0045
+# core_l[3,1] = 0.022
+# core_l[3,2] = 0.0045
 
 # dev.new()
 plot(net_core, edge.arrow.size=.2,
      # edge.color="black",
      vertex.frame.color="#ffffff",
-     # vertex.label=V(net)$comm,
+     #vertex.label=V(net)$comm,
      vertex.label=NA,
      vertex.label.color="black",
      layout = core_l*15,

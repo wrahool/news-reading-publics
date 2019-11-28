@@ -234,3 +234,4 @@ agg.KM.df = aggregate(KM.master.df$UV, by = list(KM.master.df$Media), FUN = mean
 names(agg.KM.df) = c("Media", "avg.UV")
 agg.KM.df = agg.KM.df[order(-agg.KM.df$avg.UV),]
 rownames(agg.KM.df) = NULL
+

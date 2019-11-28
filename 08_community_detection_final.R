@@ -29,27 +29,27 @@ set.seed(42)
 WT = cluster_walktrap(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
 
 save(WT, file = "04_RData/WT.Rdata")
-
-comm_list = vector("list", length(WT))
-for(i in 1:length(WT)) {
-  node.ids = unlist(lapply(WT[[i]], FUN = function(x) {which(x == V(filtered.master.g)$name)}))
-  comm = induced.subgraph(filtered.master.g, node.ids)
-  comm_list[[i]] = comm
-}
-
-comm_list2_WT = vector("list")
-
-k = 1
-for(i in 1:length(comm_list)) {
-  WT2 = walktrap.community(comm_list[[i]], weights = E(comm_list[[i]])$shared_audience)
-  for(j in 1:length(WT2)) {
-    print(k)
-    print(sort(WT2[[j]]))
-    comm_list2_WT[[k]] = WT2[[j]]
-    print("--------------------------")
-    k =  k+1
-  }
-}
+# 
+# comm_list = vector("list", length(WT))
+# for(i in 1:length(WT)) {
+#   node.ids = unlist(lapply(WT[[i]], FUN = function(x) {which(x == V(filtered.master.g)$name)}))
+#   comm = induced.subgraph(filtered.master.g, node.ids)
+#   comm_list[[i]] = comm
+# }
+# 
+# comm_list2_WT = vector("list")
+# 
+# k = 1
+# for(i in 1:length(comm_list)) {
+#   WT2 = walktrap.community(comm_list[[i]], weights = E(comm_list[[i]])$shared_audience)
+#   for(j in 1:length(WT2)) {
+#     print(k)
+#     print(sort(WT2[[j]]))
+#     comm_list2_WT[[k]] = WT2[[j]]
+#     print("--------------------------")
+#     k =  k+1
+#   }
+# }
 
 #walk-trap with resolution parameter
 g = filtered.master.g
