@@ -116,6 +116,8 @@ obs_components_plot = ggplot(obs.threshold.df, aes(x=tau, y=components)) +
   theme(text = element_text(size=18))+
   ylab("number of connected components")
 
+components_bkup = obs.threshold.df$components # to overlay this on a graph later on
+
 ############################################
 
 # get the core
@@ -259,7 +261,7 @@ names(obs.threshold.df) = c("tau", "nodes", "components", "is_connected")
 
 components_plot_without_NRP = ggplot(obs.threshold.df, aes(x=tau, y=components)) + 
   geom_line(color = "blue", linetype = "longdash") +
-  geom_line(aes(y=c(rep(1, 1000),0)), color = "red", linetype = "dashed") +
+  geom_line(aes(y=components_bkup), color = "red", linetype = "dashed") + # overlaying here
   xlab("tau") +
   ylab("number of connected components") +
   theme_bw()+
