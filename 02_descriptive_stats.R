@@ -88,6 +88,24 @@ media.breakdown = read.csv("03_Auxiliary/media_breakdown.csv", as.is = T)
 
 commonNodes = intersect(commonNodes, media.breakdown[media.breakdown$Relevant == "Y",]$Media)
 
+# for getting counts for tables
+library(tidyverse)
+media_breakdown = as_tibble(media.breakdown)
+
+media_breakdown %>%
+  filter(Media %in% commonNodes) %>%
+  pull(Indian) %>%
+  table()
+
+media_breakdown %>%
+  filter(Media %in% commonNodes) %>%
+  pull(Digital) %>%
+  table()
+
+media_breakdown %>%
+  filter(Media %in% commonNodes) %>%
+  pull(Regional) %>%
+  table()
 
 #extract induced subgraph with only the common nodes that are relevant
 #iterate over the graphs_list, get the induced subgraph and store it in a new list

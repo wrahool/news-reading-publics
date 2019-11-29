@@ -262,3 +262,7 @@ ec_p = ggplot(compare.df, aes(x = before.after, y = EC, fill = before.after)) +
 ggarrange(e_p, md_p, sd_p, msa_p, sdsa_p, dc_p, bc_p, cc_p, ec_p, 
           labels = toupper(letters)[1:9],
           ncol = 3, nrow = 3)
+
+ggarrange(e_p, md_p, msa_p, dc_p, 
+          labels = toupper(letters)[1:6],
+          ncol = 2, nrow = 2)
