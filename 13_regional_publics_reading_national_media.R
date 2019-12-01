@@ -35,11 +35,14 @@ for(i in 1:length(filtered_graphs_list)) {
 
 load("04_RData/WT2.Rdata")
 
-# the regional communities are 1, 3, 4, 6, 7, 9, 10, 11
-# international are 5 and 8
-# national legacy are  2
+# the regional communities are 1, 2, 3, 5, 8, 9, 10
+# international are 6 and 7
+# national English are  4
+# singletons are 11, 12, 13, 14
 
-regional_communities = c(1,3,4,6,7,9,10,11)
+# regional_communities = c(1,2,3,5,8,9,10)
+
+regional_communities = 1:10
 
 as_tibble(cbind(WT2$names, WT2$membership)) %>%
   rename(Media = V1, Community = V2) -> community_tbl
@@ -67,7 +70,7 @@ for(i in regional_communities) {
     select(CommunityMedia, OtherMedia, n, Month, shared_audience) %>%
     inner_join(media_digital, by = c("OtherMedia" = "Media")) %>%
     
-    mutate(C = i) %>%                                       # add a column with the community id (either V1 or V2 belongs to that community)
+    mutate(C = paste0("Community 2.",i)) %>%                                       # add a column with the community id (either V1 or V2 belongs to that community)
     
     inner_join(KM_master_tbl, by = c("Month" = "Month", "CommunityMedia" = "Media")) %>% # join to get UV of Community Media
     select(-PercentReach) %>%                               # drop percent reach
@@ -90,12 +93,25 @@ for(i in regional_communities) {
   index = index+1
 }
 
+community_digital_tbl %>%
+  ungroup() %>%
+  mutate(C = as.factor(C)) %>%
+  mutate(C = fct_relevel(C, "Community 2.10", after = Inf)) -> community_digital_tbl
 
-p = ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
+
+ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_wrap(~C, ncol =4) +
-  theme(legend.position = "bottom")
+  scale_x_continuous(breaks = NULL)+
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n),
+             color = "lightgrey")+
+  facet_wrap(~C, nrow = 2) +
+  theme_bw()+
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "bottom")
 
 # do.call(grid.arrange, c(community_digital_plots, list(ncol = 2)))
 
@@ -124,7 +140,7 @@ for(i in regional_communities) {
     select(CommunityMedia, OtherMedia, n, Month, shared_audience) %>%
     inner_join(media_digital, by = c("OtherMedia" = "Media")) %>%
     
-    mutate(C = i) %>%                                       # add a column with the community id (either V1 or V2 belongs to that community)
+    mutate(C = paste0("Community 2.", i)) %>%                                       # add a column with the community id (either V1 or V2 belongs to that community)
     
     inner_join(KM_master_tbl, by = c("Month" = "Month", "CommunityMedia" = "Media")) %>% # join to get UV of Community Media
     select(-PercentReach) %>%                               # drop percent reach
@@ -147,13 +163,90 @@ for(i in regional_communities) {
   index = index+1
 }
 
-p = ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
+community_digital_tbl %>%
+  ungroup() %>%
+  mutate(C = as.factor(C)) %>%
+  mutate(C = fct_relevel(C, "Community 2.10", after = Inf)) -> community_digital_tbl
+
+ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_wrap(~C, ncol =4) +
-  theme(legend.position = "bottom")
+  scale_x_continuous(breaks = NULL)+
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n),
+             color = "lightgrey")+
+  facet_wrap(~C, nrow = 2) +
+  theme_bw()+
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "bottom")
 
-# do.call(grid.arrange, c(community_digital_plots, list(ncol = 2)))
+###################################################################################
+
+# public wise trends of nationa/international
+
+common_nodes = read_csv("03_Auxiliary/common_nodes.csv")
+all_media_breakdown %>%  
+  filter(Media %in% common_nodes$Media) %>%
+  select(Media, Indian)-> media_geo
+
+community_geo_tbl = NULL
+community_geo_plots = list()
+index = 1
+for(i in regional_communities) {
+  
+  all_months_edgelist %>%
+    filter(V1 %in% WT2[[i]] | V2 %in% WT2[[i]]) %>%         # keep only edges starting from or ending in a specific community
+    filter(!(V1 %in% WT2[[i]] & V2 %in% WT2[[i]])) %>%      # remove edges within the community
+    
+    mutate(CommunityMedia = ifelse(V1 %in% WT2[[i]], V1, V2)) %>%
+    mutate(OtherMedia = ifelse(V1 %in% WT2[[i]], V2, V1)) %>%
+    
+    select(CommunityMedia, OtherMedia, n, Month, shared_audience) %>%
+    inner_join(media_geo, by = c("OtherMedia" = "Media")) %>%
+    
+    mutate(C = paste0("Community 2.", i)) %>%                                       # add a column with the community id (either V1 or V2 belongs to that community)
+    
+    inner_join(KM_master_tbl, by = c("Month" = "Month", "CommunityMedia" = "Media")) %>% # join to get UV of Community Media
+    select(-PercentReach) %>%                               # drop percent reach
+    mutate(PercentOveralap = 100*shared_audience/UV) %>%
+    mutate(Indian = replace(Indian, Indian == "N", "Foreigh")) %>%
+    mutate(Indian = replace(Indian, Indian == "Y", "Indian")) %>%
+    rename(Type = Indian) %>%
+    group_by(C, n, Month, Type) %>%
+    summarize(MeanPO = mean(PercentOveralap)) -> curr_community_tbl
+  
+  community_geo_tbl %>%
+    rbind(curr_community_tbl) -> community_geo_tbl
+  
+  community_geo_plots[[index]] = ggplot(curr_community_tbl, aes(x=n, y=MeanPO, color = Type)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    theme(legend.position="none") +
+    ggtitle(paste0("Audience mobility in community ", i))
+  
+  index = index+1
+}
+
+community_geo_tbl %>%
+  ungroup() %>%
+  mutate(C = as.factor(C)) %>%
+  mutate(C = fct_relevel(C, "Community 2.10", after = Inf)) -> community_geo_tbl
+
+ggplot(community_geo_tbl, aes(x=n, y=MeanPO, color = Type)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = NULL)+
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n),
+             color = "lightgrey")+
+  facet_wrap(~C, nrow = 2) +
+  theme_bw()+
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "bottom")
 
 # findings:
 # for national news, the mobility is greater from regional to legacy than regional to digital-born

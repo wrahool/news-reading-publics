@@ -11,7 +11,7 @@ KM_master_tbl = read_csv("03_Auxiliary/km_master.csv")
 all_media_breakdown = read_csv("03_Auxiliary/common_media_breakdown.csv")
 common_media = read_csv("03_Auxiliary/common_nodes.csv")
 
-# check that there are 177 outlets
+# check that there are 174 outlets
 
 KM_master_tbl %>%
   inner_join(all_media_breakdown) %>%
@@ -19,7 +19,7 @@ KM_master_tbl %>%
   filter(Media %in% common_media$Media) %>%
   pull(Media) %>%
   unique() %>%
-  length() == 177
+  length() == 174
 
 # check that the only Fishy outlet is THEFAMOUSPEOPLE.COM
 
@@ -49,16 +49,54 @@ KM_master_tbl %>%
   summarize(MeanPC = mean(PercentReach)) %>%
   mutate(Digital=replace(Digital, Digital=="N", "Legacy")) %>%
   mutate(Digital=replace(Digital, Digital=="Y", "Digital-Born")) %>%
+  ungroup() %>%
   rename(Type=Digital) -> digital_trends_tbl
+
+digital_trends_tbl %>%
+  select(n, Type, MeanPC)
+
+slope_estimate_tbl = NULL
+for(t in unique(digital_trends_tbl$Type)) {
+  digital_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Type = t) %>%
+    select(Type, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
   
-ggplot(digital_trends_tbl, aes(x=n, y=MeanPC, color=Type)) +
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+digital_trends_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> digital_trends_tbl
+
+  
+ggplot(digital_trends_tbl, aes(x=n, y=MeanPC)) +
   geom_point() +
-  geom_smooth(method = "lm", formula = y ~ x) +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n), 
-             linetype = "dotted") +
-  theme_classic()
+             color = "lightgrey") +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=2) +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec", "salmon"))
   
 # Indian National vs Indian Regional vs International media
 
@@ -75,18 +113,57 @@ KM_master_tbl %>%
   mutate(State=replace(State, State == "None", "International")) %>%
   group_by(n, Month, State) %>%
   summarize(MeanPC = mean(PercentReach)) %>%
-  rename(Type=State) -> geographic_trends_tbl
+  rename(Type=State) %>%
+  ungroup() -> geographic_trends_tbl
 
-ggplot(geographic_trends_tbl, aes(x=n, y=MeanPC, color=Type)) +
+geographic_trends_tbl %>%
+  select(n, Type, MeanPC)
+
+slope_estimate_tbl = NULL
+for(t in unique(geographic_trends_tbl$Type)) {
+  geographic_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Type = t) %>%
+    select(Type, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+geographic_trends_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> geographic_trends_tbl
+
+ggplot(geographic_trends_tbl, aes(x=n, y=MeanPC)) +
   geom_point() +
-  geom_smooth(method = "lm", formula = y ~ x) +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n), 
-             linetype = "dotted") +
-  theme_classic()
+             color = "lightgrey") +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=3) +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec", "salmon"))
 
-# network metrics longitudinal trends
+##################################################################################
+# Need to think more about these results
+# Network metrics longitudinal trends
 library(igraph)
 
 load("04_RData/01_networks.RData")
@@ -94,11 +171,11 @@ load("04_RData/02_induced_networks.RData")
 load("04_RData/03_filtered_networks.RData")
 months = read_csv("03_Auxiliary/months.csv")
 
-graphs_to_use = filtered_graphs_list # or red_graphs_list or filtered_graphs_list
+graphs_to_use = red_graphs_list # or red_graphs_list or filtered_graphs_list
 
 centr_df = NULL
 for(i in 1:length(graphs_to_use)) {
-  curr_centr = centr_degree(graphs_to_use[[i]])$centralization
+  curr_centr = centr_eigen(graphs_to_use[[i]])$centralization
   month = as.character(months$months[i])
   month_centr = data.frame(curr_centr, month)
   centr_df = rbind(centr_df, month_centr)
@@ -157,5 +234,5 @@ temporal_tbl %>%
   inner_join(ordered_months, by = c("Month" = "month")) %>%
   arrange(n) -> temporal_tbl
 
-ggplot(temporal_tbl, aes(x=n, y=log(MeanDC), color = Type)) +
+ggplot(temporal_tbl, aes(x=n, y=(MeanDC), color = Type)) +
   geom_smooth(method = "lm")

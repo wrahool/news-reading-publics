@@ -162,6 +162,9 @@ for(threshold in thresholds) {
       layout = l)
 }
 
+# number of edges removed
+100*(ecount(filtered.master.g) - ecount(observed.g))/ecount(filtered.master.g)
+
 ############################################
 
 # remove an NRP and redo thresholding
