@@ -6,6 +6,7 @@ library(moderndive)
 library(ggplot2)
 library(gridExtra)
 library(igraph)
+library(broom)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
@@ -113,6 +114,39 @@ ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "bottom")
 
+# get slopes
+community_slope_tbl = NULL
+for(community in regional_communities) {
+
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    select(MeanPO, Legacy, n) %>%
+    lm(formula=(MeanPO ~ Legacy+n)) -> m1
+
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    select(MeanPO, Legacy, n) %>%
+    lm(formula=(MeanPO ~ Legacy*n)) -> m2
+  
+  m2 %>%
+    tidy() %>%
+    filter(term == "Legacy:n") %>%
+    select(estimate, p.value) %>%
+    rename(interaction_slope = estimate) %>%
+    mutate(lines_parallel = ifelse(p.value <= 0.05, F, T)) -> interaction_slope
+  
+  tidy(anova(m1, m2)) %>%
+    filter(!is.na(p.value)) %>%
+    select(p.value) %>%
+    mutate(interaction_model_beter = ifelse(p.value < 0.05, T, F)) -> anova_p_value
+  
+  community_slope_tbl %>%
+    rbind(cbind(interaction_slope, anova_p_value)) -> community_slope_tbl
+}
+
+
 # do.call(grid.arrange, c(community_digital_plots, list(ncol = 2)))
 
 ###################################################################################
@@ -182,6 +216,40 @@ ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "bottom")
 
+
+# get slopes
+community_slope_tbl = NULL
+for(community in regional_communities) {
+  
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    select(MeanPO, Legacy, n) %>%
+    lm(formula=(MeanPO ~ Legacy+n)) -> m1
+  
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    select(MeanPO, Legacy, n) %>%
+    lm(formula=(MeanPO ~ Legacy*n)) -> m2
+  
+  m2 %>%
+    tidy() %>%
+    filter(term == "Legacy:n") %>%
+    select(estimate, p.value) %>%
+    rename(interaction_slope = estimate) %>%
+    mutate(lines_parallel = ifelse(p.value <= 0.05, F, T)) -> interaction_slope
+  
+  tidy(anova(m1, m2)) %>%
+    filter(!is.na(p.value)) %>%
+    select(p.value) %>%
+    mutate(interaction_model_beter = ifelse(p.value < 0.05, T, F)) -> anova_p_value
+  
+  community_slope_tbl %>%
+    rbind(cbind(interaction_slope, anova_p_value)) -> community_slope_tbl
+}
+
+
 ###################################################################################
 
 # public wise trends of nationa/international
@@ -211,7 +279,7 @@ for(i in regional_communities) {
     inner_join(KM_master_tbl, by = c("Month" = "Month", "CommunityMedia" = "Media")) %>% # join to get UV of Community Media
     select(-PercentReach) %>%                               # drop percent reach
     mutate(PercentOveralap = 100*shared_audience/UV) %>%
-    mutate(Indian = replace(Indian, Indian == "N", "Foreigh")) %>%
+    mutate(Indian = replace(Indian, Indian == "N", "Foreign")) %>%
     mutate(Indian = replace(Indian, Indian == "Y", "Indian")) %>%
     rename(Type = Indian) %>%
     group_by(C, n, Month, Type) %>%
@@ -247,6 +315,40 @@ ggplot(community_geo_tbl, aes(x=n, y=MeanPO, color = Type)) +
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "bottom")
+
+# get slopes
+community_slope_tbl = NULL
+for(community in regional_communities) {
+  
+  community_geo_tbl %>%
+    mutate(Foreign = ifelse(Type == "Foreign", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    select(MeanPO, Foreign, n) %>%
+    lm(formula=(MeanPO ~ Foreign+n)) -> m1
+  
+  community_geo_tbl %>%
+    mutate(Foreign = ifelse(Type == "Foreign", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    select(MeanPO, Foreign, n) %>%
+    lm(formula=(MeanPO ~ Foreign*n)) -> m2
+  
+  m2 %>%
+    tidy() %>%
+    filter(term == "Foreign:n") %>%
+    select(estimate, p.value) %>%
+    rename(interaction_slope = estimate) %>%
+    mutate(lines_parallel = ifelse(p.value <= 0.05, F, T)) -> interaction_slope
+  
+  tidy(anova(m1, m2)) %>%
+    filter(!is.na(p.value)) %>%
+    select(p.value) %>%
+    mutate(interaction_model_beter = ifelse(p.value < 0.05, T, F)) -> anova_p_value
+  
+  community_slope_tbl %>%
+    rbind(cbind(interaction_slope, anova_p_value)) -> community_slope_tbl
+}
+
+community_slope_tbl
 
 # findings:
 # for national news, the mobility is greater from regional to legacy than regional to digital-born
