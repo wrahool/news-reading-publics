@@ -51,7 +51,9 @@ for(i in 1:max(WT2$membership)) {
   n_outlets = length(outlets)
   km = KM.master.df[KM.master.df$Media %in% outlets,]
   mean_pc = mean(tapply(km$PercentReach, km$Media, mean))
+  median_PC = median(tapply(km$PercentReach, km$Media, median))
   mean_UV = mean(tapply(km$UV, km$Media, mean))
+  median_UV = median(tapply(km$UV, km$Media, median))
   
   regional_percent = nrow(all.media.breakdown[all.media.breakdown$Media %in% outlets &
                                                 all.media.breakdown$Regional == "Y",]) * 100 / length(outlets)
@@ -64,14 +66,14 @@ for(i in 1:max(WT2$membership)) {
   
   lignuistic_diversity = length(unique(all.media.breakdown[all.media.breakdown$Media %in% outlets,]$State))
   
-  res = data.frame(t(c(i, n_outlets, mean_pc, mean_UV,
+  res = data.frame(t(c(i, n_outlets, mean_pc, mean_UV, median_PC, median_UV,
                        regional_percent, digital_percent, vernacular_percent, indian_percent,
                        lignuistic_diversity)))
   
   res_df = rbind(res_df, res)
 }
 
-names(res_df) = c("comm", "n", "mean_pc", "mean_UV", "reg_percent", "dig_percent", "ver_percent", "ind_percent", "ling_div")
+names(res_df) = c("comm", "n", "mean_pc", "mean_UV", "median_PC", "median_UV",  "reg_percent", "dig_percent", "ver_percent", "ind_percent", "ling_div")
 
 write.csv(res_df, "03_Auxiliary/resolution_walktrap_community_features.csv", row.names = F)
 
