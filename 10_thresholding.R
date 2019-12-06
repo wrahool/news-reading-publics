@@ -222,8 +222,8 @@ for(i in 1:length(WT2)) {
                       ylab("% remaining nodes")
 }
 
-ggarrange(plotlist = plot_list1, ncol = 2, nrow = 7)
-ggarrange(plotlist = plot_list2, ncol = 2, nrow = 7)
+ggarrange(plotlist = plot_list1, ncol = 2, nrow = 8)
+ggarrange(plotlist = plot_list2, ncol = 2, nrow = 8)
 
 
 
@@ -273,6 +273,263 @@ components_plot_without_NRP = ggplot(obs.threshold.df, aes(x=tau, y=components))
 
 components_plot_without_NRP 
   
+
+thresholds = c(0, 0.009, 0.011, 0.026, 0.043, 0.052, 0.057, 0.147, 0.188, 0.261)
+
+l = layout_with_fr(filtered.master.g)
+
+dev.off()
+par(mfrow=c(2,5))
+for(threshold in thresholds) {
+  observed.g = filtered.master.g
+  observed.g = delete.vertices(observed.g, which(V(observed.g)$name %in% to_remove))
+  E(observed.g)$norm.wt = (E(observed.g)$shared_audience - min(E(observed.g)$shared_audience))/
+    (max(E(observed.g)$shared_audience) - min(E(observed.g)$shared_audience))
+  
+  observed.g = delete.edges(observed.g, which(E(observed.g)$norm.wt <= threshold))
+  observed.g = delete.vertices(observed.g, degree(observed.g) == 0)
+  
+  plot(observed.g, vertex.label = NA, vertex.color = "skyblue1",
+       main = paste0("tau = ", threshold))
+}
+
+############################################
+
+# remove an NRP and redo thresholding
+
+load("04_RData/WT.Rdata")
+
+plot_list1 <- vector(mode = "list", length = length(WT))
+plot_list2 <- vector(mode = "list", length = length(WT))
+
+for(i in 1:length(WT)) {
+  
+  to_remove = WT[[i]]
+  
+  observed.g = filtered.master.g
+  observed.g = delete.vertices(observed.g, which(V(observed.g)$name %in% to_remove))
+  
+  original_node_count = length(V(observed.g))
+  
+  # do thresholding
+  
+  taus = seq(0, 1, by = 0.001)
+  
+  E(observed.g)$norm.wt = (E(observed.g)$shared_audience - min(E(observed.g)$shared_audience))/
+    (max(E(observed.g)$shared_audience) - min(E(observed.g)$shared_audience))
+  
+  rem.nodes = NULL
+  n.components = NULL
+  connected = NULL
+  for(threshold in taus) {
+    observed.g = delete.edges(observed.g, which(E(observed.g)$norm.wt <= threshold))
+    observed.g = delete.vertices(observed.g, degree(observed.g) == 0)
+    rem.nodes = c(rem.nodes, vcount(observed.g))
+    n.components  = c(n.components, count_components(observed.g))
+    connected = c(connected, is_connected(observed.g))
+  }
+  
+  obs.threshold.df = as.data.frame(cbind(taus, rem.nodes, n.components, connected))
+  names(obs.threshold.df) = c("tau", "nodes", "components", "is_connected")
+  
+  # ggplot(obs.threshold.df, aes(x=tau, y=nodes)) + 
+  #   geom_line() +
+  #   xlab("tau") +
+  #   ylab("remaining nodes")
+  
+  plot_list1[[i]] = ggplot(obs.threshold.df, aes(x=tau, y=components)) + 
+    geom_line() +
+    ylim(0,5) +
+    xlab("tau") +
+    ylab("")
+  
+  plot_list2[[i]] = ggplot(obs.threshold.df, aes(x=tau, y=nodes*100/original_node_count)) + 
+    geom_line() +
+    geom_hline(aes(yintercept = 20), linetype = "dashed", color = "red") +
+    xlab("tau") +
+    ylab("% remaining nodes")
+}
+
+ggarrange(plotlist = plot_list1, ncol = 2, nrow = 3)
+ggarrange(plotlist = plot_list2, ncol = 2, nrow = 3)
+
+
+
+# explore the results
+
+i = 2
+
+to_remove = WT[[i]]
+
+observed.g = filtered.master.g
+observed.g = delete.vertices(observed.g, which(V(observed.g)$name %in% to_remove))
+
+# do thresholding
+
+taus = seq(0, 1, by = 0.001)
+
+E(observed.g)$norm.wt = (E(observed.g)$shared_audience - min(E(observed.g)$shared_audience))/
+  (max(E(observed.g)$shared_audience) - min(E(observed.g)$shared_audience))
+
+rem.nodes = NULL
+n.components = NULL
+connected = NULL
+for(threshold in taus) {
+  observed.g = delete.edges(observed.g, which(E(observed.g)$norm.wt <= threshold))
+  observed.g = delete.vertices(observed.g, degree(observed.g) == 0)
+  rem.nodes = c(rem.nodes, vcount(observed.g))
+  n.components  = c(n.components, count_components(observed.g))
+  connected = c(connected, is_connected(observed.g))
+}
+
+obs.threshold.df = as.data.frame(cbind(taus, rem.nodes, n.components, connected))
+names(obs.threshold.df) = c("tau", "nodes", "components", "is_connected")
+
+# ggplot(obs.threshold.df, aes(x=tau, y=nodes)) + 
+#   geom_line() +
+#   xlab("tau") +
+#   ylab("remaining nodes")
+
+components_plot_without_NRP = ggplot(obs.threshold.df, aes(x=tau, y=components)) + 
+  geom_line(color = "blue", linetype = "longdash") +
+  geom_line(aes(y=components_bkup), color = "red", linetype = "dashed") + # overlaying here
+  xlab("tau") +
+  ylab("number of connected components") +
+  theme_bw()+
+  theme(text = element_text(size=18))
+
+
+components_plot_without_NRP 
+
+
+thresholds = c(0, 0.009, 0.011, 0.026, 0.043, 0.052, 0.057, 0.147, 0.188, 0.261)
+
+l = layout_with_fr(filtered.master.g)
+
+dev.off()
+par(mfrow=c(2,5))
+for(threshold in thresholds) {
+  observed.g = filtered.master.g
+  observed.g = delete.vertices(observed.g, which(V(observed.g)$name %in% to_remove))
+  E(observed.g)$norm.wt = (E(observed.g)$shared_audience - min(E(observed.g)$shared_audience))/
+    (max(E(observed.g)$shared_audience) - min(E(observed.g)$shared_audience))
+  
+  observed.g = delete.edges(observed.g, which(E(observed.g)$norm.wt <= threshold))
+  observed.g = delete.vertices(observed.g, degree(observed.g) == 0)
+  
+  plot(observed.g, vertex.label = NA, vertex.color = "skyblue1",
+       main = paste0("tau = ", threshold))
+}
+
+
+############################################
+
+# remove an NRP and redo thresholding
+
+load("04_RData/WT3.Rdata")
+
+plot_list1 <- vector(mode = "list", length = length(WT))
+plot_list2 <- vector(mode = "list", length = length(WT))
+
+for(i in 1:length(WT3)) {
+  
+  to_remove = WT3[[i]]
+  
+  observed.g = filtered.master.g
+  observed.g = delete.vertices(observed.g, which(V(observed.g)$name %in% to_remove))
+  
+  original_node_count = length(V(observed.g))
+  
+  # do thresholding
+  
+  taus = seq(0, 1, by = 0.001)
+  
+  E(observed.g)$norm.wt = (E(observed.g)$shared_audience - min(E(observed.g)$shared_audience))/
+    (max(E(observed.g)$shared_audience) - min(E(observed.g)$shared_audience))
+  
+  rem.nodes = NULL
+  n.components = NULL
+  connected = NULL
+  for(threshold in taus) {
+    observed.g = delete.edges(observed.g, which(E(observed.g)$norm.wt <= threshold))
+    observed.g = delete.vertices(observed.g, degree(observed.g) == 0)
+    rem.nodes = c(rem.nodes, vcount(observed.g))
+    n.components  = c(n.components, count_components(observed.g))
+    connected = c(connected, is_connected(observed.g))
+  }
+  
+  obs.threshold.df = as.data.frame(cbind(taus, rem.nodes, n.components, connected))
+  names(obs.threshold.df) = c("tau", "nodes", "components", "is_connected")
+  
+  # ggplot(obs.threshold.df, aes(x=tau, y=nodes)) + 
+  #   geom_line() +
+  #   xlab("tau") +
+  #   ylab("remaining nodes")
+  
+  plot_list1[[i]] = ggplot(obs.threshold.df, aes(x=tau, y=components)) + 
+    geom_line() +
+    ylim(0,5) +
+    xlab("tau") +
+    ylab("")
+  
+  plot_list2[[i]] = ggplot(obs.threshold.df, aes(x=tau, y=nodes*100/original_node_count)) + 
+    geom_line() +
+    geom_hline(aes(yintercept = 20), linetype = "dashed", color = "red") +
+    xlab("tau") +
+    ylab("% remaining nodes")
+}
+
+ggarrange(plotlist = plot_list1, ncol = 2, nrow = 3)
+ggarrange(plotlist = plot_list2, ncol = 2, nrow = 3)
+
+
+
+# explore the results
+
+i = 2
+
+to_remove = WT[[i]]
+
+observed.g = filtered.master.g
+observed.g = delete.vertices(observed.g, which(V(observed.g)$name %in% to_remove))
+
+# do thresholding
+
+taus = seq(0, 1, by = 0.001)
+
+E(observed.g)$norm.wt = (E(observed.g)$shared_audience - min(E(observed.g)$shared_audience))/
+  (max(E(observed.g)$shared_audience) - min(E(observed.g)$shared_audience))
+
+rem.nodes = NULL
+n.components = NULL
+connected = NULL
+for(threshold in taus) {
+  observed.g = delete.edges(observed.g, which(E(observed.g)$norm.wt <= threshold))
+  observed.g = delete.vertices(observed.g, degree(observed.g) == 0)
+  rem.nodes = c(rem.nodes, vcount(observed.g))
+  n.components  = c(n.components, count_components(observed.g))
+  connected = c(connected, is_connected(observed.g))
+}
+
+obs.threshold.df = as.data.frame(cbind(taus, rem.nodes, n.components, connected))
+names(obs.threshold.df) = c("tau", "nodes", "components", "is_connected")
+
+# ggplot(obs.threshold.df, aes(x=tau, y=nodes)) + 
+#   geom_line() +
+#   xlab("tau") +
+#   ylab("remaining nodes")
+
+components_plot_without_NRP = ggplot(obs.threshold.df, aes(x=tau, y=components)) + 
+  geom_line(color = "blue", linetype = "longdash") +
+  geom_line(aes(y=components_bkup), color = "red", linetype = "dashed") + # overlaying here
+  xlab("tau") +
+  ylab("number of connected components") +
+  theme_bw()+
+  theme(text = element_text(size=18))
+
+
+components_plot_without_NRP 
+
 
 thresholds = c(0, 0.009, 0.011, 0.026, 0.043, 0.052, 0.057, 0.147, 0.188, 0.261)
 

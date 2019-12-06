@@ -150,7 +150,9 @@ for(f in files) {
   #calculate t
   #t = phi * sqrt(N-2) / sqrt(1 - phi^2)
   
-  EL_df$t_num = EL_df$phi * sqrt((1000 * EL_df$total_internet) - 2)
+ # EL_df$t_num = EL_df$phi * sqrt((1000 * EL_df$total_internet) - 2)
+  
+  EL_df$t_num = EL_df$phi * sqrt((1000 * max(EL_df$from_UV, EL_df$to_UV)) - 2)
   EL_df$t_denom = sqrt(1 - (EL_df$phi)^2)
   
   #the NaNs are for those rows where from to are equal.

@@ -88,6 +88,15 @@ media.breakdown = read.csv("03_Auxiliary/media_breakdown.csv", as.is = T)
 
 commonNodes = intersect(commonNodes, media.breakdown[media.breakdown$Relevant == "Y",]$Media)
 
+# groups to remove
+# these groups are removed because the individual outlets are already there in commonNodes
+# the only groups we keep are for those individual outlets that do not exist in all months (ie. in commonNodes)
+# we remove QZ.COM because we have Atlantic Media but not Atlantic.
+# So keeping QZ and removing Atlantic Media will remove Atlantic from our data
+to_remove = c("India Today Group", "QZ.COM", "The Indian Express Group")
+
+commonNodes = commonNodes[which(!commonNodes %in% to_remove)]
+
 # for getting counts for tables
 library(tidyverse)
 media_breakdown = as_tibble(media.breakdown)

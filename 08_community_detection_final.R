@@ -27,6 +27,7 @@ get.edge.wt.communities = function(g, c1, c2) {
 #multi-level walktrap without resolution parameter
 set.seed(42)
 WT = cluster_walktrap(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+modularity(filtered.master.g, membership(WT))
 
 save(WT, file = "04_RData/WT.Rdata")
 # 
@@ -67,8 +68,40 @@ for(v in V(g)$name) {
 
 set.seed(42)
 WT2 = cluster_walktrap(g, weights = E(g)$shared_audience)
+modularity(g, membership(WT2))
 
 save(WT2, file = "04_RData/WT2.Rdata")
+
+
+#Arenas
+resolution_df = NULL
+for(i in seq(from = 1, to = 10000, by = 50)){
+  print(i)
+  g = filtered.master.g
+  g[from=V(g), to=V(g)] = 1
+  for(v in V(g)$name) {
+    E(g)[v %--% v]$shared_audience = i
+  }
+  set.seed(42)
+  WT3 = cluster_walktrap(g, weights = E(g)$shared_audience)
+  n_c = max(WT3$membership)
+  
+  row = c(i, n_c)
+  resolution_df = rbind(resolution_df, row)
+}
+
+i = 7401
+
+g = filtered.master.g
+g[from=V(g), to=V(g)] = 1
+for(v in V(g)$name) {
+  E(g)[v %--% v]$shared_audience = i
+}
+set.seed(42)
+WT3 = cluster_walktrap(g, weights = E(g)$shared_audience)
+
+save(WT3, file = "04_RData/WT3.Rdata")
+
 
 #build community network
 

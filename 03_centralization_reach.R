@@ -19,25 +19,25 @@ visualize = T
 
 #combining The Indian Express Group and INDIANEXPRESS.COM
 #find vertex id of The Indian Express Group and INDIANEXPRESS.COM
-
-for(i in 1:length(red_graphs_list)) {
-  v1 = which("The Indian Express Group" == V(red_graphs_list[[1]])$name)
-  v2 = which("INDIANEXPRESS.COM" == V(red_graphs_list[[1]])$name)
-  
-  #find total number of vertices in the original graph
-  l = length(V(red_graphs_list[[1]])$name)
-  
-  mapping.vector = c(1:(v2-1), v1, v2:(l-1))
-  
-  test.g = contract(red_graphs_list[[1]], mapping.vector, vertex.attr.comb = "first")
-  
-  if(length(which("INDIANEXPRESS.COM" == V(test.g)$name)) > 0) {
-    V(test.g)$name[which("INDIANEXPRESS.COM" == V(test.g)$name)] = "The Indian Express Group"
-  }
-  
-  # test.g = simplify(test.g, remove.multiple = T, remove.loops = T, edge.attr.comb = "sum")
-  test.g = simplify(test.g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
-}
+# this loop is no longer needed
+# for(i in 1:length(red_graphs_list)) {
+#   v1 = which("The Indian Express Group" == V(red_graphs_list[[1]])$name)
+#   v2 = which("INDIANEXPRESS.COM" == V(red_graphs_list[[1]])$name)
+#   
+#   #find total number of vertices in the original graph
+#   l = length(V(red_graphs_list[[1]])$name)
+#   
+#   mapping.vector = c(1:(v2-1), v1, v2:(l-1))
+#   
+#   test.g = contract(red_graphs_list[[1]], mapping.vector, vertex.attr.comb = "first")
+#   
+#   if(length(which("INDIANEXPRESS.COM" == V(test.g)$name)) > 0) {
+#     V(test.g)$name[which("INDIANEXPRESS.COM" == V(test.g)$name)] = "The Indian Express Group"
+#   }
+#   
+#   # test.g = simplify(test.g, remove.multiple = T, remove.loops = T, edge.attr.comb = "sum")
+#   test.g = simplify(test.g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
+# }
 
 ####################################################################
 #do centralization-reach analysis

@@ -48,7 +48,7 @@ master.el$to = as.character(master.el$to)
 master.g = graph.data.frame(master.el, directed = F)
 
 #now combine all edges between every pair of nodes, and sum them so that there's one "heavy" edge between two nodes
-master.g = simplify(master.g, remove.loops = T, remove.multiple = T, edge.attr.comb = "sum")
+master.g = igraph::simplify(master.g, remove.loops = T, remove.multiple = T, edge.attr.comb = "sum")
 
 #now convert that graph to an edgelist again so as to allow calculation of new t's.
 #for this, we will need to sum keymeasures values as well. let's do that first.
@@ -98,7 +98,7 @@ master.el$phi = master.el$phi_num / master.el$phi_denom
 
 #now calculate t for each edge
 
-master.el$t_num = master.el$phi * sqrt((1000*master.el$TTI) - 2)
+master.el$t_num = master.el$phi * sqrt((1000*max(master.el$from_total_uv, master.el$to_total_UV)) - 2)
 master.el$t_denom = sqrt(1- (master.el$phi)^2)
 master.el$t = master.el$t_num / master.el$t_denom
 
@@ -111,7 +111,7 @@ final.master.g = graph.data.frame(final.master.el, directed = F)
 is_simple(final.master.g)
 
 #Still just to be sure.
-final.master.g = simplify(final.master.g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
+final.master.g = igraph::simplify(final.master.g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
 
 #again there SHOULDN'T be any edges with weight 0. SOMETHING'S WRONG IF THERE ARE/IS.
 min(E(final.master.g)$shared_audience)
