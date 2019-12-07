@@ -116,6 +116,11 @@ media_breakdown %>%
   pull(Regional) %>%
   table()
 
+media_breakdown %>%
+  filter(Media %in% commonNodes) %>%
+  pull(English) %>%
+  table()
+
 #extract induced subgraph with only the common nodes that are relevant
 #iterate over the graphs_list, get the induced subgraph and store it in a new list
 #red_graphs_list (reduced graphs list)

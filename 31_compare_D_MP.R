@@ -42,7 +42,8 @@ media_breakdown %>%
 
 MP_df %>%
   inner_join(Indian_tbl) %>%
-  mutate(English=replace(English, English=="Y", "Englishg")) %>%
+  mutate(English=replace(English, English=="Y", "English")) %>%
+  mutate(English=replace(English, English=="B", "English")) %>%
   mutate(English=replace(English, English=="N", "Vernacular")) %>%
   gather(Platform, UV, -Media, -English, -Month) -> MP_df2
 
@@ -54,9 +55,9 @@ for(i in 1:length(unique(MP_df2$Month))) {
   MP_df2 %>% 
     filter(Month==unique(MP_df2$Month)[i]) -> month_df
   
-    boxplots[[i]]= ggplot(data = month_df, aes(x=Regional, y=UV)) +
-      geom_boxplot(aes(fill=Regional)) +
-      facet_wrap(.~gsub("_UV", "", Platform))+
+    boxplots[[i]]= ggplot(data = month_df, aes(x=English, y=UV)) +
+      geom_boxplot(aes(fill=English)) +
+      facet_wrap(.~gsub("_UV", "", Platform), scales = "free")+
       ylab(paste0(month_df$Month[1],  " UV"))+
       theme_bw()+
       theme(legend.position="none") 
@@ -71,7 +72,13 @@ for(i in 1:length(unique(MP_df2$Month))) {
 ggarrange(plotlist = boxplots, nrow = 4, ncol = 2)
 
 
+wilcox.test(MP_df$Desktop_UV, MP_df$Mobile_UV)
 
-
+for(month in unique(MP_df$Month)) {
+  print(month)
+  print(wilcox.test(MP_df[MP_df$Month == month,]$Desktop_UV,
+                    MP_df[MP_df$Month == month,]$Mobile_UV))
+  print("---------------")
+}
 
 
