@@ -72,3 +72,129 @@ cor.test(total_KM_tbl$TotalUV,
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$ATV,
          method = "kendall")
+
+# community wise distribution
+KM_ATV_master_df
+KM_master_df
+
+load("04_RData/WT2.Rdata")
+
+comm_ATV_tbl = NULL
+for(i in 1:length(WT2)) {
+  KM_ATV_master_df %>%
+    filter(Media %in% WT2[[i]]) %>%
+    group_by(Media) %>%
+    summarize(MonthlyMean = mean(ATV)) %>%
+    ungroup() %>%
+    mutate(comm = i) -> curr_comm_ATV
+  
+  comm_ATV_tbl %>% 
+    rbind(curr_comm_ATV) -> comm_ATV_tbl
+}
+
+comm_ATV_tbl %>%
+  filter(!comm %in% c(10, 11, 12, 13, 14, 15)) -> comm_ATV_tbl2
+
+regional_comms = c(1:4, 6, 9)
+international_comms = c(7,8)
+
+comm_ATV_tbl2 %>%
+  mutate(comm = replace(comm, comm %in% regional_comms, 20)) %>%
+  mutate(comm = replace(comm, comm %in% international_comms, 30)) -> comm_ATV_tbl3
+
+ggplot(comm_ATV_tbl3, aes(x=as.character(comm), y = MonthlyMean)) +
+  geom_boxplot()
+
+media_breakdown = read_csv("03_Auxiliary/media_breakdown.csv")
+common_nodes %>%
+  inner_join(media_breakdown) -> common_nodes_breakdown
+
+# merge with media breakdown
+KM_ATV_master_df %>%
+  group_by(Media) %>%
+  summarize(MeanATV = mean(ATV)) %>%
+  ungroup() %>%
+  inner_join(common_nodes_breakdown) -> common_nodes_breakdown_ATV
+
+# ATV English v Vernacular
+common_nodes_breakdown_ATV %>%
+  filter(Indian == "Y") %>%
+  select(Media, English, MeanATV) -> EnglishATV
+
+ggplot(EnglishATV, aes(x=English, y=MeanATV)) +
+  geom_boxplot()
+
+#ATV regional vs National
+common_nodes_breakdown_ATV %>%
+  filter(Indian == "Y") %>%
+  select(Media, Regional, MeanATV) -> RegionalATV
+
+ggplot(RegionalATV, aes(x=Regional, y=MeanATV)) +
+  geom_boxplot()
+
+#ATV Indian vs International
+common_nodes_breakdown_ATV %>%
+  select(Media, Indian, MeanATV) -> IndianATV
+
+ggplot(IndianATV, aes(x=Indian, y=MeanATV)) +
+  geom_boxplot()
+
+#monthly ATV trends
+KM_ATV_master_df %>%
+  group_by(Month) %>%
+  summarize(MeanATV = mean(ATV), MedianATV = median(ATV)) -> monthlyATV
+
+ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+
+ordered_months %>%
+  rename(Month = month) -> ordered_months
+
+monthlyATV %>% 
+  inner_join(ordered_months) %>%
+  arrange(n) -> monthlyATV
+
+ggplot(monthlyATV, aes(x=n, y=MeanATV)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot(monthlyATV, aes(x=n, y=MedianATV)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# only common nodes
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) -> KM_ATV_master_df_common
+
+KM_ATV_master_df_common %>%
+  group_by(Month) %>%
+  summarize(MeanATV = mean(ATV), MedianATV = median(ATV)) %>%
+  ungroup() -> monthlyATV
+
+ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+
+ordered_months %>%
+  rename(Month = month) -> ordered_months
+
+monthlyATV %>% 
+  inner_join(ordered_months) %>%
+  arrange(n) -> monthlyATV
+
+ggplot(monthlyATV, aes(x=n, y=MeanATV)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot(monthlyATV, aes(x=n, y=MedianATV)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+m = lm(MedianATV~n, data = monthlyATV)
+
+KM_ATV_master_df_common %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) -> KM_ATV_master_df_n
+
+ggplot(KM_ATV_master_df_n, aes(x=n, y=ATV, group = n)) +
+  geom_boxplot() +
+  geom_abline(intercept = coef(m)[1], slope = coef(m)[2], color ="red") +
+  coord_cartesian(xlim = NULL, ylim = c(0,20)) +
+  theme_bw()

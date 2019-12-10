@@ -81,4 +81,10 @@ for(month in unique(MP_df$Month)) {
   print("---------------")
 }
 
+ggplot(data = MP_df2, aes(x=English, y=UV)) +
+  geom_boxplot(aes(fill=English)) +
+  facet_wrap(.~gsub("_UV", "", Platform), scales = "free")+
+  ylab(paste0(month_df$Month[1],  " UV"))+
+  theme_bw()+
+  theme(legend.position="none")
 
