@@ -3,6 +3,7 @@ rm(list = ls())
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
 library(tidyverse)
+library(gridExtra)
 
 TI_ATV_df = read_csv("03_Auxiliary/total_internet_atv.csv")
 KM_ATV_master_df = read_csv("03_Auxiliary/km_atv_master.csv")
@@ -198,3 +199,134 @@ ggplot(KM_ATV_master_df_n, aes(x=n, y=ATV, group = n)) +
   geom_abline(intercept = coef(m)[1], slope = coef(m)[2], color ="red") +
   coord_cartesian(xlim = NULL, ylim = c(0,20)) +
   theme_bw()
+
+# scatterplot between percent reach and ATV
+KM_ATV_master_df
+
+KM_master_df = inner_join(KM_ATV_master_df, KM_master_df)
+
+KM_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  group_by(Media) %>%
+  summarize(MeanPC = mean(PercentReach), MeanATV = mean(ATV)) %>%
+  ungroup() %>%
+  inner_join(common_nodes_breakdown) -> media_km
+
+p1 <- ggplot(media_km) +
+  geom_point(aes(x=MeanPC, y=MeanATV, color=Regional)) +
+  theme_bw()
+
+p2 <- ggplot(media_km) +
+  geom_point(aes(x=MeanPC, y=MeanATV, color=Digital)) +
+  theme_bw()
+
+p3 <- ggplot(media_km) +
+  geom_point(aes(x=MeanPC, y=MeanATV, color=Indian)) +
+  theme_bw()
+
+p4 <- ggplot(media_km) +
+  geom_point(aes(x=MeanPC, y=MeanATV, color=English)) +
+  theme_bw()
+
+
+grid.arrange(p1, p2, p3, p4, nrow = 2)
+
+# trends in Regional v National
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  filter(Indian == "Y") %>%
+  select(n, Month, Media, Regional, ATV) %>%
+  group_by(n, Month, Regional) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> regional_trends_tbl
+
+ggplot(regional_trends_tbl, aes(x=n, y=medianATV)) +
+  geom_point(aes(color = Regional))
+
+ggplot(regional_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point(aes(color = Regional))
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  filter(Indian == "Y") %>%
+  select(n, Month, Media, Regional, ATV) -> boxplot_regional_trends_tbl
+
+ggplot(boxplot_regional_trends_tbl) +
+    geom_boxplot(aes(x=n, y=ATV, group=interaction(n, Regional), fill = Regional)) +
+    coord_cartesian(xlim = NULL, ylim = c(0,20))
+    
+
+
+# trends in Indian v International
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  select(n, Month, Media, Indian, ATV) %>%
+  group_by(n, Month, Indian) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> indian_trends_tbl
+
+ggplot(indian_trends_tbl, aes(x=n, y=medianATV)) +
+  geom_point(aes(color = Indian))
+
+ggplot(indian_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point(aes(color = Indian))
+
+# trends in English v Vernacular
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  filter(Indian == "Y") %>%
+  select(n, Month, Media, English, ATV) %>%
+  group_by(n, Month, English) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> english_trends_tbl
+
+ggplot(english_trends_tbl, aes(x=n, y=medianATV)) +
+  geom_point(aes(color = English))
+
+ggplot(english_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point(aes(color = English))
+
+# trends in Indian Digital v Legacy
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  filter(Indian == "Y") %>%
+  select(n, Month, Media, Digital, ATV) %>%
+  group_by(n, Month, Digital) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> i_digital_trends_tbl
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=medianATV)) +
+  geom_point(aes(color = Digital))
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point(aes(color = Digital))
+
+# trends in overall Digital v Legacy
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  select(n, Month, Media, Digital, ATV) %>%
+  group_by(n, Month, Digital) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> i_digital_trends_tbl
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=medianATV)) +
+  geom_point(aes(color = Digital))
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point(aes(color = Digital))
+
+
+
+
