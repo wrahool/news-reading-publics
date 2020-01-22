@@ -6,11 +6,11 @@ setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Projec
 # Prepare data for visualization #
 ##################################
 
-KM.master.df = read.csv("03_Auxiliary/km_master.csv", as.is = T)
-all.media.breakdown = read.csv("03_Auxiliary/common_media_breakdown.csv", as.is = T)
+KM.master.df = read.csv("03_Auxiliary/Fall 19/km_master.csv", as.is = T)
+all.media.breakdown = read.csv("03_Auxiliary/Fall 19/common_media_breakdown.csv", as.is = T)
 
 #regular WT
-load("04_RData/WT.Rdata")
+load("04_RData/Fall 19/WT.Rdata")
 
 res_df = NULL
 for(i in 1:max(WT$membership)) {

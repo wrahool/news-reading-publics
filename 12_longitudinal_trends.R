@@ -7,9 +7,9 @@ library(ggplot2)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
-KM_master_tbl = read_csv("03_Auxiliary/km_master.csv")
-all_media_breakdown = read_csv("03_Auxiliary/common_media_breakdown.csv")
-common_media = read_csv("03_Auxiliary/common_nodes.csv")
+KM_master_tbl = read_csv("03_Auxiliary/Fall 19/km_master.csv")
+all_media_breakdown = read_csv("03_Auxiliary/Fall 19/common_media_breakdown.csv")
+common_media = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
 
 # check that there are 174 outlets
 
@@ -31,7 +31,7 @@ KM_master_tbl %>%
   pull(Media) %>%
   unique() == "THEFAMOUSPEOPLE.COM"
 
-ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+ordered_months = read_csv("03_Auxiliary/Fall 19/ordered_months.csv")
 ordered_months %>%
   rename(Month = month) -> ordered_months
 
@@ -75,10 +75,24 @@ for(t in unique(digital_trends_tbl$Type)) {
   bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
 }
 
+for(t in unique(digital_trends_tbl$Type)) {
+  message(t)
+  print(digital_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    summary())
+}
+
 digital_trends_tbl %>%
   inner_join(slope_estimate_tbl) %>%
   select(-c(estimate,p_value)) -> digital_trends_tbl
 
+#legacy
+0.004390 + (c(-1.96, 1.96) * 0.002178)
+
+#digital born
+-0.0086493 + c(c(-1.96, 1.96) * 0.0009783)
   
 ggplot(digital_trends_tbl, aes(x=n, y=MeanPC)) +
   geom_point() +
@@ -139,6 +153,26 @@ for(t in unique(geographic_trends_tbl$Type)) {
   bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
 }
 
+for(t in unique(geographic_trends_tbl$Type)) {
+  message(t)
+  print(geographic_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    summary())
+}
+
+#CIs
+#national
+0.001033 + (c(-1.96, 1.96) * 0.003183)
+
+#international
+0.0022743 + (c(-1.96, 1.96) * 0.0008352)
+
+#regional
+-0.0018214 + (c(-1.96, 1.96) * 0.0002372)
+
+
 geographic_trends_tbl %>%
   inner_join(slope_estimate_tbl) %>%
   select(-c(estimate,p_value)) -> geographic_trends_tbl
@@ -160,6 +194,189 @@ ggplot(geographic_trends_tbl, aes(x=n, y=MeanPC)) +
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
                                  "dec", "salmon"))
+
+
+# English vs Vernacular
+KM_master_tbl %>%
+  inner_join(all_media_breakdown) %>%
+  select(-X1) %>%
+  filter(Media %in% common_media$Media) %>% 
+  select(Month, Media, PercentReach, English) %>%
+  inner_join(ordered_months) %>%
+  select(n, Month, Media, everything()) %>%
+  arrange(n) %>%
+  mutate(English=replace(English, English %in% c("Y", "B"), "English")) %>%
+  mutate(English=replace(English, English == "N", "Vernacular")) %>%
+  group_by(n, Month, English) %>%
+  summarize(MeanPC = mean(PercentReach)) %>%
+  rename(Type=English) %>%
+  ungroup() -> language_trends_tbl
+
+language_trends_tbl %>%
+  select(n, Type, MeanPC)
+
+slope_estimate_tbl = NULL
+for(t in unique(language_trends_tbl$Type)) {
+  language_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Type = t) %>%
+    select(Type, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+for(t in unique(language_trends_tbl$Type)) {
+  message(t)
+  print(language_trends_tbl %>%
+          filter(Type == t) %>%
+          select(MeanPC, n) %>%
+          lm() %>%
+          summary())
+}
+
+#CIs:
+#Vernacular
+-0.005679 + (c(-1.96, 1.96) * 0.001092)
+
+#English
+0.002804 + (c(-1.96, 1.96) * 0.001395)
+
+language_trends_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> language_trends_tbl
+
+ggplot(language_trends_tbl, aes(x=n, y=MeanPC)) +
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=3) +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec", "salmon"))
+
+
+#remove foreign outlets from English outlets, and only keep Indian outlets
+KM_master_tbl %>%
+  inner_join(all_media_breakdown) %>%
+  select(-X1) %>%
+  filter(Media %in% common_media$Media, Indian == "Y") %>% 
+  select(Month, Media, PercentReach, English) %>%
+  inner_join(ordered_months) %>%
+  select(n, Month, Media, everything()) %>%
+  arrange(n) %>%
+  mutate(English=replace(English, English %in% c("Y", "B"), "English")) %>%
+  mutate(English=replace(English, English == "N", "Vernacular")) %>%
+  group_by(n, Month, English) %>%
+  summarize(MeanPC = mean(PercentReach)) %>%
+  rename(Type=English) %>%
+  ungroup() -> language_trends_tbl
+
+language_trends_tbl %>%
+  select(n, Type, MeanPC)
+
+slope_estimate_tbl = NULL
+for(t in unique(language_trends_tbl$Type)) {
+  language_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Type = t) %>%
+    select(Type, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+for(t in unique(language_trends_tbl$Type)) {
+  message(t)
+  print(language_trends_tbl %>%
+          filter(Type == t) %>%
+          select(MeanPC, n) %>%
+          lm() %>%
+          summary())
+}
+
+#CI
+#English  Indian outlets
+0.003323 + (c(-1.96, 1.96) * 0.002111)
+
+# foreign English outlets
+KM_master_tbl %>%
+  inner_join(all_media_breakdown) %>%
+  select(-X1) %>%
+  filter(Media %in% common_media$Media, Indian == "N") %>% 
+  select(Month, Media, PercentReach, English) %>%
+  inner_join(ordered_months) %>%
+  select(n, Month, Media, everything()) %>%
+  arrange(n) %>%
+  mutate(English=replace(English, English %in% c("Y", "B"), "English")) %>%
+  mutate(English=replace(English, English == "N", "Vernacular")) %>%
+  group_by(n, Month, English) %>%
+  summarize(MeanPC = mean(PercentReach)) %>%
+  rename(Type=English) %>%
+  ungroup() -> language_trends_tbl
+
+language_trends_tbl %>%
+  select(n, Type, MeanPC)
+
+slope_estimate_tbl = NULL
+for(t in unique(language_trends_tbl$Type)) {
+  language_trends_tbl %>%
+    filter(Type == t) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Type = t) %>%
+    select(Type, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+for(t in unique(language_trends_tbl$Type)) {
+  message(t)
+  print(language_trends_tbl %>%
+          filter(Type == t) %>%
+          select(MeanPC, n) %>%
+          lm() %>%
+          summary())
+}
+
+#CI
+#Foreign English
+0.0022709 + (c(-1.96, 1.96) * 0.0008463)
 
 ##################################################################################
 # Need to think more about these results
