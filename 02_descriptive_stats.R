@@ -4,7 +4,7 @@ setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Projec
 
 library(igraph)
 
-load("04_RData/01_networks.RData")
+load("04_RData/Fall 19/01_networks.RData")
 
 #turn this to T if you want to see the plots
 visualize = T
@@ -15,7 +15,7 @@ m = matrix(NA,length(graphs_list),9)
 
 #get network parameters
 
-months = read.csv("03_Auxiliary/months.csv", as.is = T)
+months = read.csv("03_Auxiliary/Fall 19/months.csv", as.is = T)
 months = months$months
 
 for(i in 1:length(graphs_list)){
@@ -84,7 +84,7 @@ for(i in 2:length(graphs_list))
 #add Times of India to this list. NOTE: October 2014 does not have Times of India.
 commonNodes = c(commonNodes, "The Times Of India Sites")
 
-media.breakdown = read.csv("03_Auxiliary/media_breakdown.csv", as.is = T)
+media.breakdown = read.csv("03_Auxiliary/Fall 19/media_breakdown.csv", as.is = T)
 
 commonNodes = intersect(commonNodes, media.breakdown[media.breakdown$Relevant == "Y",]$Media)
 

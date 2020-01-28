@@ -7,11 +7,11 @@ library(ggplot2)
 library(gridExtra)
 library(ggpubr)
 
-load("04_RData/01_networks.RData")
-load("04_RData/02_induced_networks.RData")
+load("04_RData/Fall 19/01_networks.RData")
+load("04_RData/Fall 19/02_induced_networks.RData")
 
-KM.master.df = read.csv("03_Auxiliary/km_master.csv", as.is = T)
-months = read.csv("03_Auxiliary/months.csv", as.is = T)
+KM.master.df = read.csv("03_Auxiliary/Fall 19/km_master.csv", as.is = T)
+months = read.csv("03_Auxiliary/Fall 19/months.csv", as.is = T)
 months = months$months
 
 #turn this to T if you want to see the plots
@@ -47,7 +47,7 @@ for(i in 1:length(red_graphs_list))
   deg.cent.df[[i]] = centr_degree(red_graphs_list[[i]], normalized = T)
 
 
-common.media = read.csv("03_Auxiliary/common_nodes.csv", as.is = T)
+common.media = read.csv("03_Auxiliary/Fall 19/common_nodes.csv", as.is = T)
 
 #create a dataframe with all possible "deg cent" and "perc reach" pairs.
 dc_pr.df = NULL
