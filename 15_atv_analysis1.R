@@ -5,11 +5,11 @@ setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Projec
 library(tidyverse)
 library(gridExtra)
 
-TI_ATV_df = read_csv("03_Auxiliary/total_internet_atv.csv")
-KM_ATV_master_df = read_csv("03_Auxiliary/km_atv_master.csv")
+TI_ATV_df = read_csv("03_Auxiliary/Fall 19/total_internet_atv.csv")
+KM_ATV_master_df = read_csv("03_Auxiliary/Fall 19/km_atv_master.csv")
 
-KM_master_df = read_csv("03_Auxiliary/km_master.csv")
-TI_df = read_csv("03_Auxiliary/total_internet_uv.csv")
+KM_master_df = read_csv("03_Auxiliary/Fall 19/km_master.csv")
+TI_df = read_csv("03_Auxiliary/Fall 19/total_internet_uv.csv")
 
 TI_df %>%
   pull(TotalInternetUV) %>%
@@ -25,65 +25,101 @@ KM_master_df %>%
   mutate(ATV = TotalTime/(TotalUV*1000), Overall_PC = 100*TotalUV/TI_UV) %>%
   arrange(desc(Overall_PC)) -> total_KM_tbl
 
-common_nodes = read_csv("03_Auxiliary/common_nodes.csv")
+common_nodes = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
 
 # pearson's
+
+#pointless
 cor.test(total_KM_tbl$TotalUV,
          total_KM_tbl$TotalTime)
 
+#pointless
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalTime)
 
+#this is useful
 cor.test(total_KM_tbl$TotalUV,
          total_KM_tbl$ATV)
 
+#this is useful
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$ATV)
 
 # spearman's
+
+#pointless
 cor.test(total_KM_tbl$TotalUV,
          total_KM_tbl$TotalTime,
          method = "spearman")
 
+#pointless
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalTime,
          method = "spearman")
 
+#useful
 cor.test(total_KM_tbl$TotalUV,
          total_KM_tbl$ATV,
          method = "spearman")
 
+#makes sense
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$ATV,
          method = "spearman")
 
 # spearman's
+
+#pointless
 cor.test(total_KM_tbl$TotalUV,
          total_KM_tbl$TotalTime,
          method = "kendall")
 
+#pointless
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalTime,
          method = "kendall")
 
+#useful
 cor.test(total_KM_tbl$TotalUV,
          total_KM_tbl$ATV,
          method = "kendall")
 
+#useful
 cor.test(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$TotalUV,
          total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]$ATV,
          method = "kendall")
+
+
+#distribution of ATV
+p1 = ggplot(total_KM_tbl) +
+  geom_density(aes(x=ATV))
+
+p2 = ggplot(total_KM_tbl) +
+  geom_density(aes(x=Overall_PC))
+
+grid.arrange(p1, p2)
+
+#common nodes only
+p1 = ggplot(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]) +
+  geom_density(aes(x=ATV)) +
+  theme_bw()
+
+p2 = ggplot(total_KM_tbl[total_KM_tbl$Media %in% common_nodes$Media,]) +
+  geom_density(aes(x=Overall_PC)) +
+  theme_bw()
+
+grid.arrange(p1, p2)
 
 # community wise distribution
 KM_ATV_master_df
 KM_master_df
 
-load("04_RData/WT2.Rdata")
+load("04_RData/Fall 19/WT2.Rdata")
 
 comm_ATV_tbl = NULL
-for(i in 1:length(WT2)) {
+for(i in 1:max(WT2$membership)) {
   KM_ATV_master_df %>%
-    filter(Media %in% WT2[[i]]) %>%
+    filter(Media %in% WT2$names[WT2$membership == i]) %>%
     group_by(Media) %>%
     summarize(MonthlyMean = mean(ATV)) %>%
     ungroup() %>%
@@ -94,10 +130,14 @@ for(i in 1:length(WT2)) {
 }
 
 comm_ATV_tbl %>%
-  filter(!comm %in% c(10, 11, 12, 13, 14, 15)) -> comm_ATV_tbl2
+  filter(!comm %in% c(11, 12, 13, 14)) -> comm_ATV_tbl2
 
-regional_comms = c(1:4, 6, 9)
-international_comms = c(7,8)
+ggplot(data = comm_ATV_tbl2) +
+  geom_density(aes(x=MonthlyMean), alpha = 0.4) +
+  facet_wrap( ~ comm)
+
+regional_comms = c(1:3, 5, 8:10)
+international_comms = c(6,7)
 
 comm_ATV_tbl2 %>%
   mutate(comm = replace(comm, comm %in% regional_comms, 20)) %>%
@@ -106,7 +146,14 @@ comm_ATV_tbl2 %>%
 ggplot(comm_ATV_tbl3, aes(x=as.character(comm), y = MonthlyMean)) +
   geom_boxplot()
 
-media_breakdown = read_csv("03_Auxiliary/media_breakdown.csv")
+ggplot(comm_ATV_tbl3) +
+  geom_density(aes(x=MonthlyMean)) +
+  facet_grid(rows = vars(comm))
+
+ggplot(comm_ATV_tbl3, aes(x=MonthlyMean, color = comm)) +
+  geom_density()
+
+media_breakdown = read_csv("03_Auxiliary/Fall 19/media_breakdown.csv")
 common_nodes %>%
   inner_join(media_breakdown) -> common_nodes_breakdown
 
@@ -145,7 +192,7 @@ KM_ATV_master_df %>%
   group_by(Month) %>%
   summarize(MeanATV = mean(ATV), MedianATV = median(ATV)) -> monthlyATV
 
-ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+ordered_months = read_csv("03_Auxiliary/Fall 19/ordered_months.csv")
 
 ordered_months %>%
   rename(Month = month) -> ordered_months
@@ -171,7 +218,7 @@ KM_ATV_master_df_common %>%
   summarize(MeanATV = mean(ATV), MedianATV = median(ATV)) %>%
   ungroup() -> monthlyATV
 
-ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+ordered_months = read_csv("03_Auxiliary/Fall 19/ordered_months.csv")
 
 ordered_months %>%
   rename(Month = month) -> ordered_months

@@ -95,19 +95,19 @@ digital_trends_tbl %>%
 -0.0086493 + c(c(-1.96, 1.96) * 0.0009783)
   
 ggplot(digital_trends_tbl, aes(x=n, y=MeanPC)) +
-  geom_point() +
-  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n), 
              color = "lightgrey") +
-  scale_x_continuous(breaks = NULL) +
-  facet_wrap(~Type, nrow=1, ncol=2) +
   theme_bw() +
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "none") +
-  scale_colour_manual(values = c("sig_inc" = "blue",
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=2) +
+  scale_colour_manual(values = c("sig_inc" = "skyblue1",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
                                  "dec", "salmon"))
@@ -178,18 +178,19 @@ geographic_trends_tbl %>%
   select(-c(estimate,p_value)) -> geographic_trends_tbl
 
 ggplot(geographic_trends_tbl, aes(x=n, y=MeanPC)) +
-  geom_point() +
-  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n), 
              color = "lightgrey") +
-  scale_x_continuous(breaks = NULL) +
-  facet_wrap(~Type, nrow=1, ncol=3) +
   theme_bw() +
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "none") +
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=3) +
+ 
   scale_colour_manual(values = c("sig_inc" = "blue",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
@@ -256,18 +257,18 @@ language_trends_tbl %>%
   select(-c(estimate,p_value)) -> language_trends_tbl
 
 ggplot(language_trends_tbl, aes(x=n, y=MeanPC)) +
-  geom_point() +
-  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n), 
              color = "lightgrey") +
-  scale_x_continuous(breaks = NULL) +
-  facet_wrap(~Type, nrow=1, ncol=3) +
   theme_bw() +
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "none") +
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=3) +
   scale_colour_manual(values = c("sig_inc" = "blue",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
@@ -383,12 +384,12 @@ for(t in unique(language_trends_tbl$Type)) {
 # Network metrics longitudinal trends
 library(igraph)
 
-load("04_RData/01_networks.RData")
-load("04_RData/02_induced_networks.RData")
-load("04_RData/03_filtered_networks.RData")
-months = read_csv("03_Auxiliary/months.csv")
+load("04_RData/Fall 19/01_networks.RData")
+load("04_RData/Fall 19/02_induced_networks.RData")
+load("04_RData/Fall 19/03_filtered_networks.RData")
+months = read_csv("03_Auxiliary/Fall 19/months.csv")
 
-graphs_to_use = red_graphs_list # or red_graphs_list or filtered_graphs_list
+graphs_to_use = filtered_graphs_list # graphs_list or red_graphs_list or filtered_graphs_list
 
 centr_df = NULL
 for(i in 1:length(graphs_to_use)) {
@@ -404,7 +405,7 @@ names(centr_df) = c("centr", "month")
 
 centr_df$month = as.character(centr_df$month)
 
-ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+ordered_months = read_csv("03_Auxiliary/Fall 19/ordered_months.csv")
 
 centr_df %>%
   inner_join(ordered_months) %>%
@@ -418,15 +419,15 @@ summary(lm(centr~n, data = centr_df))
 
 ####################################################################
 
-all_media_breakdown = read_csv("03_Auxiliary/media_breakdown.csv")
-common_media = read_csv("03_Auxiliary/common_nodes.csv")
-months = read_csv("03_Auxiliary/months.csv")
+all_media_breakdown = read_csv("03_Auxiliary/Fall 19/media_breakdown.csv")
+common_media = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
+months = read_csv("03_Auxiliary/Fall 19/months.csv")
 
 all_media_breakdown %>%
   filter(Media %in% common_media$Media) %>%
   select(Media, Digital) -> common_media_digital
 
-graphs_to_use = filtered_graphs_list
+graphs_to_use = red_graphs_list
 
 temporal_tbl = NULL
 for(i in 1:length(graphs_to_use)) {

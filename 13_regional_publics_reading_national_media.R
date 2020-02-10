@@ -10,15 +10,15 @@ library(broom)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
-load("04_RData/03_filtered_networks.RData")
+load("04_RData/Fall 19/03_filtered_networks.RData")
 
-KM_master_tbl = read_csv("03_Auxiliary/km_master.csv")
+KM_master_tbl = read_csv("03_Auxiliary/Fall 19/km_master.csv")
 
-ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+ordered_months = read_csv("03_Auxiliary/Fall 19/ordered_months.csv")
 ordered_months %>%
   rename(Month = month) -> ordered_months
 
-all_media_breakdown = read_csv("03_Auxiliary/common_media_breakdown.csv")
+all_media_breakdown = read_csv("03_Auxiliary/Fall 19/common_media_breakdown.csv")
 
 all_months_edgelist = NULL
 for(i in 1:length(filtered_graphs_list)) {
@@ -34,23 +34,23 @@ for(i in 1:length(filtered_graphs_list)) {
   month_EL %>% rbind(all_months_edgelist) -> all_months_edgelist
 }
 
-load("04_RData/WT2.Rdata")
+load("04_RData/Fall 19/WT2.Rdata")
 
 # the regional communities are 1, 2, 3, 5, 8, 9, 10
 # international are 6 and 7
 # national English are  4
 # singletons are 11, 12, 13, 14
 
-# regional_communities = c(1,2,3,5,8,9,10)
+regional_communities = c(1,2,3,5,8,9,10)
 
-regional_communities = 1:10
+# regional_communities = 1:10
 
 as_tibble(cbind(WT2$names, WT2$membership)) %>%
   rename(Media = V1, Community = V2) -> community_tbl
 
 # public wise trends of national digital/legacy media
 
-common_nodes = read_csv("03_Auxiliary/common_nodes.csv")
+common_nodes = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
 all_media_breakdown %>%  
   filter(Media %in% common_nodes$Media) %>%
   filter(Indian == "Y") %>%
@@ -101,18 +101,18 @@ community_digital_tbl %>%
 
 
 ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  scale_x_continuous(breaks = NULL)+
+  theme_bw()+
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "bottom") +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n),
              color = "lightgrey")+
-  facet_wrap(~C, nrow = 2) +
-  theme_bw()+
-  theme(axis.text=element_text(size=13),
-        strip.text.x = element_text(size = 14, colour = "black"),
-        legend.position = "bottom")
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = NULL)+
+  facet_wrap(~C, nrow = 2)
 
 # get slopes
 community_slope_tbl = NULL
@@ -153,7 +153,7 @@ for(community in regional_communities) {
 
 # public wise trends of international digital/legacy media
 
-common_nodes = read_csv("03_Auxiliary/common_nodes.csv")
+common_nodes = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
 all_media_breakdown %>%  
   filter(Media %in% common_nodes$Media) %>%
   filter(Indian == "N") %>%
@@ -203,18 +203,18 @@ community_digital_tbl %>%
   mutate(C = fct_relevel(C, "Community 2.10", after = Inf)) -> community_digital_tbl
 
 ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  scale_x_continuous(breaks = NULL)+
-  geom_vline(xintercept = pull(ordered_months %>% 
-                                 filter(grepl("January", Month)) %>% 
-                                 select(n),n),
-             color = "lightgrey")+
-  facet_wrap(~C, nrow = 2) +
   theme_bw()+
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
-        legend.position = "bottom")
+        legend.position = "bottom")+
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n),
+             color = "lightgrey")
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = NULL)+
+  facet_wrap(~C, nrow = 2)
 
 
 # get slopes
@@ -254,7 +254,7 @@ for(community in regional_communities) {
 
 # public wise trends of nationa/international
 
-common_nodes = read_csv("03_Auxiliary/common_nodes.csv")
+common_nodes = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
 all_media_breakdown %>%  
   filter(Media %in% common_nodes$Media) %>%
   select(Media, Indian)-> media_geo
@@ -303,18 +303,18 @@ community_geo_tbl %>%
   mutate(C = fct_relevel(C, "Community 2.10", after = Inf)) -> community_geo_tbl
 
 ggplot(community_geo_tbl, aes(x=n, y=MeanPO, color = Type)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  scale_x_continuous(breaks = NULL)+
+  theme_bw()+
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "bottom") +
   geom_vline(xintercept = pull(ordered_months %>% 
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n),
              color = "lightgrey")+
-  facet_wrap(~C, nrow = 2) +
-  theme_bw()+
-  theme(axis.text=element_text(size=13),
-        strip.text.x = element_text(size = 14, colour = "black"),
-        legend.position = "bottom")
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = NULL)+
+  facet_wrap(~C, nrow = 2)
 
 # get slopes
 community_slope_tbl = NULL

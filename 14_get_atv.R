@@ -93,6 +93,6 @@ for(f in oxford_KM_D_files) {
   KM.ATV.master.df = rbind(KM.ATV.master.df, KM.ATV.month.df)
 }
 
-write.csv(TI.ATV.df, "03_Auxiliary/total_internet_atv.csv", row.names = FALSE)
-write.csv(KM.ATV.master.df, "03_Auxiliary/km_atv_master.csv", row.names = F)
+write.csv(TI.ATV.df, "03_Auxiliary/Fall 19/total_internet_atv.csv", row.names = FALSE)
+write.csv(KM.ATV.master.df, "03_Auxiliary/Fall 19/km_atv_master.csv", row.names = F)
 

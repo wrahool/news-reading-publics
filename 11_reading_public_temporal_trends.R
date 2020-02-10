@@ -5,15 +5,15 @@ library(moderndive)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
-KM_master_tbl = read_csv("03_Auxiliary/km_master.csv")
+KM_master_tbl = read_csv("03_Auxiliary/Fall 19/km_master.csv")
 # all_media_breakdown = read_csv("03_Auxiliary/common_media_breakdown.csv")
 
-ordered_months = read_csv("03_Auxiliary/ordered_months.csv")
+ordered_months = read_csv("03_Auxiliary/Fall 19/ordered_months.csv")
 ordered_months %>%
   rename(Month = month) -> ordered_months
 
 #regular WT
-load("04_RData/WT.Rdata")
+load("04_RData/Fall 19/WT.Rdata")
 
 community_month_tbl = NULL
 for(i in 1:max(WT$membership)) {
@@ -93,6 +93,17 @@ for(c in 1:max(WT$membership)) {
   bind_rows(c_estimate_tbl, c_estimate) -> c_estimate_tbl
 }
 
+c = 1
+c_estimate_tbl = NULL
+for(c in 1:max(WT$membership)) {
+  message(c)
+  trends_tbl %>%
+    filter(Community == paste0("Community 1.",c)) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    summary() %>% print()
+}
+
 c_estimate_tbl
 
 c_estimate_tbl %>%
@@ -106,18 +117,18 @@ trends_tbl %>% inner_join(community_colors) ->
   trends_tbl
 
 ggplot(trends_tbl, aes(y=MeanPC, x=n)) +
-  geom_point(size=0.01) +
-  geom_smooth(method = "lm", aes(color = slope)) +
-  geom_vline(xintercept = pull(ordered_months %>% 
-                                 filter(grepl("January", Month)) %>% 
-                                 select(n),n), 
-             color = "lightgrey") +
-  scale_x_continuous(breaks = NULL) +
-  facet_wrap(~Community, nrow=2, ncol=3) +
   theme_bw()+
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "none") +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  geom_point(size=0.01) +
+  geom_smooth(method = "lm", aes(color = slope)) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Community, nrow=2, ncol=3) +
   scale_colour_manual(values = c("sig_inc" = "blue",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
@@ -125,7 +136,7 @@ ggplot(trends_tbl, aes(y=MeanPC, x=n)) +
 
 ####################################################################################
 #resolution WT
-load("04_RData/WT2.Rdata")
+load("04_RData/Fall 19/WT2.Rdata")
 
 community_month_tbl = NULL
 for(i in 1:max(WT2$membership)) {
@@ -228,6 +239,15 @@ for(c in 1:max(WT2$membership)) {
   bind_rows(c_estimate_tbl, c_estimate) -> c_estimate_tbl
 }
 
+for(c in 1:max(WT2$membership)) {
+  message(c)
+  trends_tbl %>%
+    filter(Community == paste0("Community 2.",c)) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    summary() %>% print()
+}
+
 # add slope colours
 # if significant increase then blue
 # if non-significant increase then skyblue
@@ -248,21 +268,22 @@ trends_tbl_without_singles %>% inner_join(community_colors) ->
 # put level Community 2.10 at the end
 trends_tbl_without_singles %>%
   mutate(Community = as.factor(Community)) %>%
-  mutate(Community = fct_relevel(Community, "Community 2.10", after = Inf)) -> trends_tbl_without_singles
+  mutate(Community = fct_relevel(Community, "Community 2.10", after = Inf)) -> 
+  trends_tbl_without_singles
 
 ggplot(trends_tbl_without_singles, aes(y=MeanPC, x=n)) +
-  geom_point(size=0.01) +
-  geom_smooth(method = "lm", aes(color = slope)) +
-  geom_vline(xintercept = pull(ordered_months %>% 
-                                 filter(grepl("January", Month)) %>% 
-                                 select(n),n), 
-             color = "lightgrey") +
-  scale_x_continuous(breaks = NULL) +
-  facet_wrap(~Community, nrow=2, ncol=5) +
   theme_bw()+
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
         legend.position = "none") +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  geom_point(size=0.01) +
+  geom_smooth(method = "lm", aes(color = slope)) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Community, nrow=2, ncol=5) +
   scale_colour_manual(values = c("sig_inc" = "blue",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
