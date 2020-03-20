@@ -4,6 +4,7 @@ setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Projec
 
 library(tidyverse)
 library(gridExtra)
+library(igraph)
 
 TI_ATV_df = read_csv("03_Auxiliary/Fall 19/total_internet_atv.csv")
 KM_ATV_master_df = read_csv("03_Auxiliary/Fall 19/km_atv_master.csv")
@@ -134,7 +135,8 @@ comm_ATV_tbl %>%
 
 ggplot(data = comm_ATV_tbl2) +
   geom_density(aes(x=MonthlyMean), alpha = 0.4) +
-  facet_wrap( ~ comm)
+  facet_wrap(~comm, nrow = 2) +
+  theme_bw()
 
 regional_comms = c(1:3, 5, 8:10)
 international_comms = c(6,7)
@@ -148,10 +150,12 @@ ggplot(comm_ATV_tbl3, aes(x=as.character(comm), y = MonthlyMean)) +
 
 ggplot(comm_ATV_tbl3) +
   geom_density(aes(x=MonthlyMean)) +
-  facet_grid(rows = vars(comm))
+  facet_grid(rows = vars(comm)) +
+  theme_bw()
 
-ggplot(comm_ATV_tbl3, aes(x=MonthlyMean, color = comm)) +
-  geom_density()
+ggplot(comm_ATV_tbl3, aes(x=MonthlyMean, fill=as.factor(comm), color = as.factor(comm))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
 
 media_breakdown = read_csv("03_Auxiliary/Fall 19/media_breakdown.csv")
 common_nodes %>%
@@ -172,6 +176,25 @@ common_nodes_breakdown_ATV %>%
 ggplot(EnglishATV, aes(x=English, y=MeanATV)) +
   geom_boxplot()
 
+ggplot(EnglishATV, aes(x=MeanATV, fill=as.factor(English), color = as.factor(English))) + 
+  geom_density(alpha=0.4)
+
+#put Both as English
+EnglishATV %>% mutate(English = ifelse(English %in% c("B", "Y"), "Y", "N")) -> temp
+ggplot(temp, aes(x=English, y=MeanATV)) +
+  geom_boxplot()
+
+ggplot(temp, aes(x=MeanATV, fill=as.factor(English), color = as.factor(English))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
+
+#put Both as Regional
+EnglishATV %>% mutate(English = ifelse(English %in% c("B", "N"), "N", "Y")) -> temp
+ggplot(temp, aes(x=English, y=MeanATV)) +
+  geom_boxplot()
+ggplot(temp, aes(x=MeanATV, fill=as.factor(English), color = as.factor(English))) + 
+  geom_density(alpha=0.4)
+
 #ATV regional vs National
 common_nodes_breakdown_ATV %>%
   filter(Indian == "Y") %>%
@@ -180,12 +203,51 @@ common_nodes_breakdown_ATV %>%
 ggplot(RegionalATV, aes(x=Regional, y=MeanATV)) +
   geom_boxplot()
 
+ggplot(RegionalATV, aes(x=MeanATV, fill=as.factor(Regional), color = as.factor(Regional))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
+
 #ATV Indian vs International
 common_nodes_breakdown_ATV %>%
   select(Media, Indian, MeanATV) -> IndianATV
 
 ggplot(IndianATV, aes(x=Indian, y=MeanATV)) +
   geom_boxplot()
+ggplot(IndianATV, aes(x=MeanATV, fill=as.factor(Indian), color = as.factor(Indian))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
+
+#ATV Indian Legacy vs Digital-born
+common_nodes_breakdown_ATV %>%
+  filter(Indian == "Y") %>%
+  select(Media, Digital, MeanATV) -> iDigitalATV
+
+ggplot(iDigitalATV, aes(x=Digital, y=MeanATV)) +
+  geom_boxplot()
+ggplot(iDigitalATV, aes(x=MeanATV, fill=as.factor(Digital), color = as.factor(Digital))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
+
+#ATV International Legacy vs Digital-born
+common_nodes_breakdown_ATV %>%
+  filter(Indian == "N") %>%
+  select(Media, Digital, MeanATV) -> intDigitalATV
+
+ggplot(intDigitalATV, aes(x=Digital, y=MeanATV)) +
+  geom_boxplot()
+ggplot(intDigitalATV, aes(x=MeanATV, fill=as.factor(Digital), color = as.factor(Digital))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
+
+#ATV legacy vs digital-born
+common_nodes_breakdown_ATV %>%
+  select(Media, Digital, MeanATV) -> intDigitalATV
+
+ggplot(intDigitalATV, aes(x=Digital, y=MeanATV)) +
+  geom_boxplot()
+ggplot(intDigitalATV, aes(x=MeanATV, fill=as.factor(Digital), color = as.factor(Digital))) + 
+  geom_density(alpha=0.4) +
+  theme_bw()
 
 #monthly ATV trends
 KM_ATV_master_df %>%
@@ -229,11 +291,13 @@ monthlyATV %>%
 
 ggplot(monthlyATV, aes(x=n, y=MeanATV)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm")+
+  theme_bw()
 
 ggplot(monthlyATV, aes(x=n, y=MedianATV)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  theme_bw()
 
 m = lm(MedianATV~n, data = monthlyATV)
 
@@ -292,8 +356,10 @@ KM_ATV_master_df %>%
 ggplot(regional_trends_tbl, aes(x=n, y=medianATV)) +
   geom_point(aes(color = Regional))
 
-ggplot(regional_trends_tbl, aes(x=n, y=meanATV)) +
-  geom_point(aes(color = Regional))
+ggplot(regional_trends_tbl, aes(x=n, y=meanATV, color = Regional)) +
+  geom_smooth(method="lm") +
+  geom_point() +
+  theme_bw()
 
 KM_ATV_master_df %>%
   filter(Media %in% common_nodes$Media) %>%
@@ -321,8 +387,10 @@ KM_ATV_master_df %>%
 ggplot(indian_trends_tbl, aes(x=n, y=medianATV)) +
   geom_point(aes(color = Indian))
 
-ggplot(indian_trends_tbl, aes(x=n, y=meanATV)) +
-  geom_point(aes(color = Indian))
+ggplot(indian_trends_tbl, aes(x=n, y=meanATV, color = Indian)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  theme_bw()
 
 # trends in English v Vernacular
 
@@ -338,8 +406,26 @@ KM_ATV_master_df %>%
 ggplot(english_trends_tbl, aes(x=n, y=medianATV)) +
   geom_point(aes(color = English))
 
-ggplot(english_trends_tbl, aes(x=n, y=meanATV)) +
-  geom_point(aes(color = English))
+ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# put both as regional
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  filter(Indian == "Y") %>%
+  select(n, Month, Media, English, ATV) %>%
+  group_by(n, Month, English) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) %>%
+  mutate(English = ifelse(English %in% c("B", "N"), "N", "Y")) -> english_trends_tbl
+
+ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
 
 # trends in Indian Digital v Legacy
 
@@ -355,8 +441,30 @@ KM_ATV_master_df %>%
 ggplot(i_digital_trends_tbl, aes(x=n, y=medianATV)) +
   geom_point(aes(color = Digital))
 
-ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV)) +
+ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV, color=Digital)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+
+# trends in international Digital vs Legacy
+
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  filter(Indian == "N") %>%
+  select(n, Month, Media, Digital, ATV) %>%
+  group_by(n, Month, Digital) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> i_digital_trends_tbl
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=medianATV)) +
   geom_point(aes(color = Digital))
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV, color=Digital)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
 
 # trends in overall Digital v Legacy
 
