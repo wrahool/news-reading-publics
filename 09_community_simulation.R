@@ -185,6 +185,8 @@ sim_homogenieities_df <- data.frame(sim_homogenieities)
 
 sim_plot1 <- ggplot(sim_homogenieities_df) + geom_density(aes(x=sim_homogenieities)) +
   geom_vline(xintercept = obs_homo, linetype="dashed", color = "red") +
+  geom_vline(xintercept = quantile(sim_homogenieities, 0.95)) +
+  xlim(c(0,1)) +
   theme_bw()
 
 p_value1 <- sum(obs_homo < sim_homogenieities)/length(sim_homogenieities)
@@ -282,20 +284,25 @@ for(i in 1:10000) {
   sim_homogenieities2 <- c(sim_homogenieities2, sim_homogenieity)
 }
 
-print(1)
-sim_homogenieities_df <- data.frame(sim_homogenieities2)
+sim_homogenieities_df2 <- data.frame(sim_homogenieities2)
 
-print(2)
-sim_plot2 <- ggplot(sim_homogenieities_df) + geom_density(aes(x=sim_homogenieities2)) +
+sim_plot2 <- ggplot(sim_homogenieities_df2) + geom_density(aes(x=sim_homogenieities2)) +
   geom_vline(xintercept = obs_homo2, linetype="dashed", color = "red") +
+  geom_vline(xintercept = quantile(sim_homogenieities2, 0.95)) +
+  xlim(c(0,1)) +
   theme_bw()
 
-print(3)
 p_value2 <- sum(obs_homo2 < sim_homogenieities2)/length(sim_homogenieities2)
 
-print(4)
 grid.arrange(sim_plot1, sim_plot2)
 
 print(p_value2)
 
 save(obs_homo2, p_value2, sim_homogenieities2, file = "04_RData/Fall 19/community_simulation2.Rdata")
+
+ggplot(sim_homogenieities_df) + 
+  geom_density(aes(x=sim_homogenieities)) +
+  geom_vline(xintercept = quantile(sim_homogenieities, 0.95)) +
+  geom_vline(xintercept = obs_homo, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = obs_homo2, linetype = "dashed", color = "red") +
+  theme_bw()
