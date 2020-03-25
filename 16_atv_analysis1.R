@@ -157,6 +157,21 @@ ggplot(comm_ATV_tbl3, aes(x=MonthlyMean, fill=as.factor(comm), color = as.factor
   geom_density(alpha=0.4) +
   theme_bw()
 
+#mann whitney u test: national == regional?
+wilcox.test(comm_ATV_tbl3[comm_ATV_tbl3$comm == 20,]$MonthlyMean,
+            comm_ATV_tbl3[comm_ATV_tbl3$comm == 4,]$MonthlyMean, alternative = "g")
+#median of regional > media of national 
+
+#mann whitney u test: national == international?
+wilcox.test(comm_ATV_tbl3[comm_ATV_tbl3$comm == 4,]$MonthlyMean,
+            comm_ATV_tbl3[comm_ATV_tbl3$comm == 30,]$MonthlyMean, alternative = "g")
+#median of national > median on international
+
+#mann whitney u test: regional == international?
+wilcox.test(comm_ATV_tbl3[comm_ATV_tbl3$comm == 20,]$MonthlyMean,
+            comm_ATV_tbl3[comm_ATV_tbl3$comm == 30,]$MonthlyMean, alternative = "g")
+#median of regional > median on international
+
 media_breakdown = read_csv("03_Auxiliary/Fall 19/media_breakdown.csv")
 common_nodes %>%
   inner_join(media_breakdown) -> common_nodes_breakdown

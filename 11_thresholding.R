@@ -8,7 +8,7 @@ library(gridExtra)
 library(tidyverse)
 library(ggpubr)
 
-load("04_RData/04_master_networks.RData")
+load("04_RData/Fall 19/04_master_networks.RData")
 
 
 # simulation
@@ -169,7 +169,7 @@ for(threshold in thresholds) {
 
 # remove an NRP and redo thresholding
 
-load("04_RData/WT2.Rdata")
+load("04_RData/Fall 19/WT2.Rdata")
 
 plot_list1 <- vector(mode = "list", length = length(WT2))
 plot_list2 <- vector(mode = "list", length = length(WT2))
@@ -225,7 +225,11 @@ for(i in 1:length(WT2)) {
 ggarrange(plotlist = plot_list1, ncol = 2, nrow = 8)
 ggarrange(plotlist = plot_list2, ncol = 2, nrow = 8)
 
+plot_list1[[1]] +
+  theme_bw()
 
+plot_list1[[4]] +
+  theme_bw()
 
 # explore the results
 

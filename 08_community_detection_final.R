@@ -9,7 +9,7 @@ library(gridExtra)
 
 #load("04_RData/03_filtered_networks.RData")
 #load("04_RData/02_induced_networks.RData")
-load("04_RData/04_master_networks.RData")
+load("04_RData/Fall 19/04_master_networks.RData")
 
 #function to get edge weights between communities
 get.edge.wt.communities = function(g, c1, c2) {
@@ -56,7 +56,7 @@ save(WT, file = "04_RData/WT.Rdata")
 g = filtered.master.g
 g[from=V(g), to=V(g)] = 1
 
-KM.master.df = read.csv("03_Auxiliary/km_master.csv", as.is = T)
+KM.master.df = read.csv("03_Auxiliary/Fall 19/km_master.csv", as.is = T)
 
 KM.master.total.df = tapply(KM.master.df$UV, KM.master.df$Media, sum)
 KM.master.total.df = as.data.frame(cbind(names(KM.master.total.df), KM.master.total.df), row.names = F)
@@ -139,5 +139,59 @@ for(i in 1:length(WT2)) {
 
 options(scipen=999)
 
-write.csv(comm_g1_EL, "03_Auxiliary/simple_WT_community_network.csv", row.names = F)
-write.csv(comm_g2_EL, "03_Auxiliary/resolution_WT_community_network.csv", row.names = F)
+write.csv(comm_g1_EL, "03_Auxiliary/Fall 19/simple_WT_community_network.csv", row.names = F)
+write.csv(comm_g2_EL, "03_Auxiliary/Fall 19/resolution_WT_community_network.csv", row.names = F)
+
+comm_g1_EL <- read.csv("03_Auxiliary/Fall 19/simple_WT_community_network.csv", as.is = T)
+comm_g2_EL <- read.csv("03_Auxiliary/Fall 19/resolution_WT_community_network.csv", as.is = T)
+
+#boxplots of edges of WT2 community networks
+library(tidyverse)
+
+t_df <- data.frame(
+  rbind(
+    c(1, "regional"),
+    c(2, "regional"),
+    c(3, "regional"),
+    c(4, "national"),
+    c(5, "regional"),
+    c(6, "international"),
+    c(7, "international"),
+    c(8, "regional"),
+    c(9, "regional"),
+    c(10, "regional"),
+    c(11, "regional"),
+    c(12, "regional"),
+    c(13, "regional"),
+    c(14, "regional")
+  )
+)
+
+names(t_df) = c("comm", "type")
+
+comm_g2_EL %>%
+  merge(t_df, by.x = "comm1", by.y = "comm") %>%
+  rename(type1 = type) %>%
+  merge(t_df, by.x = "comm2", by.y = "comm") %>%
+  rename(type2 = type) %>%
+  select(type1, type2, weight) %>%
+  mutate(edgeType = paste(type1, type2, sep = "_")) %>%
+  select(edgeType, weight) %>%
+  mutate(edgeType = ifelse(edgeType == "international_regional", "regional_international", edgeType),
+         edgeType = ifelse(edgeType == "national_regional", "regional_national", edgeType),
+         edgeType = ifelse(edgeType == "international_national", "national_international", edgeType)) %>%
+  mutate(edgeType = as.factor(edgeType)) -> comm_edge_df
+
+
+ggplot(comm_edge_df, aes(x=edgeType, y=weight/1000000)) +
+  geom_boxplot() +
+  theme_bw()
+
+wilcox.test(comm_edge_df[comm_edge_df$edgeType == "regional_regional",]$weight,
+            comm_edge_df[comm_edge_df$edgeType == "regional_international",]$weight,
+            alternative = "l")
+
+wilcox.test(comm_edge_df[comm_edge_df$edgeType == "regional_regional",]$weight,
+            comm_edge_df[comm_edge_df$edgeType == "regional_national",]$weight,
+            alternative = "l")
+

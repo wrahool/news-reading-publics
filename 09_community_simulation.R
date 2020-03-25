@@ -306,3 +306,17 @@ ggplot(sim_homogenieities_df) +
   geom_vline(xintercept = obs_homo, linetype = "dashed", color = "red") +
   geom_vline(xintercept = obs_homo2, linetype = "dashed", color = "red") +
   theme_bw()
+
+load("04_RData/Fall 19/community_simulation1.Rdata")
+load("04_RData/Fall 19/community_simulation2.Rdata")
+library(ggplot2)
+
+sim_homogenieities_df <- data.frame(sim_homogenieities)
+
+ggplot(sim_homogenieities_df) + 
+  geom_density(aes(x=sim_homogenieities)) +
+  geom_vline(xintercept = quantile(sim_homogenieities, 0.95)) +
+  geom_vline(xintercept = obs_homo, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = obs_homo2, linetype = "dashed", color = "red") +
+  xlim(0, 1) +
+  theme_bw()
