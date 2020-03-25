@@ -7,6 +7,8 @@ library(ggplot2)
 library(gridExtra)
 library(igraph)
 library(broom)
+library(Kendall)
+library(trend)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
@@ -86,10 +88,10 @@ for(i in regional_communities) {
     rbind(curr_community_tbl) -> community_digital_tbl
   
   community_digital_plots[[index]] = ggplot(curr_community_tbl, aes(x=n, y=MeanPO, color = Type)) +
-        geom_point() +
-        geom_smooth(method = "lm") +
-        theme(legend.position="none") +
-        ggtitle(paste0("Audience mobility in community ", i))
+    geom_point() +
+    geom_smooth(method = "lm") +
+    theme(legend.position="none") +
+    ggtitle(paste0("Audience mobility in community ", i))
   
   index = index+1
 }
@@ -100,54 +102,28 @@ community_digital_tbl %>%
   mutate(C = fct_relevel(C, "Community 2.10", after = Inf)) -> community_digital_tbl
 
 
-ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
-  theme_bw()+
-  theme(axis.text=element_text(size=13),
-        strip.text.x = element_text(size = 14, colour = "black"),
-        legend.position = "bottom") +
-  geom_vline(xintercept = pull(ordered_months %>% 
-                                 filter(grepl("January", Month)) %>% 
-                                 select(n),n),
-             color = "lightgrey")+
-  geom_point() +
-  geom_smooth(method = "lm") +
-  scale_x_continuous(breaks = NULL)+
-  facet_wrap(~C, nrow = 2)
-
-# get slopes
-community_slope_tbl = NULL
-for(community in regional_communities) {
-
-  community_digital_tbl %>%
-    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
-    filter(C==paste0("Community 2.", community)) %>%
-    select(MeanPO, Legacy, n) %>%
-    lm(formula=(MeanPO ~ Legacy+n)) -> m1
-
-  community_digital_tbl %>%
-    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
-    filter(C==paste0("Community 2.", community)) %>%
-    select(MeanPO, Legacy, n) %>%
-    lm(formula=(MeanPO ~ Legacy*n)) -> m2
-  
-  m2 %>%
-    tidy() %>%
-    filter(term == "Legacy:n") %>%
-    select(estimate, p.value) %>%
-    rename(interaction_slope = estimate) %>%
-    mutate(lines_parallel = ifelse(p.value <= 0.05, F, T)) -> interaction_slope
-  
-  tidy(anova(m1, m2)) %>%
-    filter(!is.na(p.value)) %>%
-    select(p.value) %>%
-    mutate(interaction_model_beter = ifelse(p.value < 0.05, T, F)) -> anova_p_value
-  
-  community_slope_tbl %>%
-    rbind(cbind(community, interaction_slope, anova_p_value)) -> community_slope_tbl
+for(c in unique(community_digital_tbl$C)) {
+  for(t in unique(community_digital_tbl$Type)) {
+    message(c)
+    message(t)
+    community_digital_tbl %>%
+      filter(C==c, Type==t) %>%
+      select(MeanPO) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      MannKendall() %>%
+      summary()
+    
+    print("-----------------------")
+    
+    community_digital_tbl %>%
+      filter(C==c, Type==t) %>%
+      select(MeanPO) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      sens.slope() %>%
+      print()
+  }
 }
-
-
-# do.call(grid.arrange, c(community_digital_plots, list(ncol = 2)))
 
 ###################################################################################
 
@@ -217,36 +193,27 @@ ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
   facet_wrap(~C, nrow = 2)
 
 
-# get slopes
-community_slope_tbl = NULL
-for(community in regional_communities) {
-  
-  community_digital_tbl %>%
-    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
-    filter(C==paste0("Community 2.", community)) %>%
-    select(MeanPO, Legacy, n) %>%
-    lm(formula=(MeanPO ~ Legacy+n)) -> m1
-  
-  community_digital_tbl %>%
-    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
-    filter(C==paste0("Community 2.", community)) %>%
-    select(MeanPO, Legacy, n) %>%
-    lm(formula=(MeanPO ~ Legacy*n)) -> m2
-  
-  m2 %>%
-    tidy() %>%
-    filter(term == "Legacy:n") %>%
-    select(estimate, p.value) %>%
-    rename(interaction_slope = estimate) %>%
-    mutate(lines_parallel = ifelse(p.value <= 0.05, F, T)) -> interaction_slope
-  
-  tidy(anova(m1, m2)) %>%
-    filter(!is.na(p.value)) %>%
-    select(p.value) %>%
-    mutate(interaction_model_beter = ifelse(p.value < 0.05, T, F)) -> anova_p_value
-  
-  community_slope_tbl %>%
-    rbind(cbind(community, interaction_slope, anova_p_value)) -> community_slope_tbl
+for(c in unique(community_digital_tbl$C)) {
+  for(t in unique(community_digital_tbl$Type)) {
+    message(c)
+    message(t)
+    community_digital_tbl %>%
+      filter(C==c, Type==t) %>%
+      select(MeanPO) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      MannKendall() %>%
+      summary()
+    
+    print("-----------------------")
+    
+    community_digital_tbl %>%
+      filter(C==c, Type==t) %>%
+      select(MeanPO) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      sens.slope() %>%
+      print()
+  }
 }
 
 
@@ -316,39 +283,30 @@ ggplot(community_geo_tbl, aes(x=n, y=MeanPO, color = Type)) +
   scale_x_continuous(breaks = NULL)+
   facet_wrap(~C, nrow = 2)
 
-# get slopes
-community_slope_tbl = NULL
-for(community in regional_communities) {
-  
-  community_geo_tbl %>%
-    mutate(Foreign = ifelse(Type == "Foreign", 1, 0)) %>%
-    filter(C==paste0("Community 2.", community)) %>%
-    select(MeanPO, Foreign, n) %>%
-    lm(formula=(MeanPO ~ Foreign+n)) -> m1
-  
-  community_geo_tbl %>%
-    mutate(Foreign = ifelse(Type == "Foreign", 1, 0)) %>%
-    filter(C==paste0("Community 2.", community)) %>%
-    select(MeanPO, Foreign, n) %>%
-    lm(formula=(MeanPO ~ Foreign*n)) -> m2
-  
-  m2 %>%
-    tidy() %>%
-    filter(term == "Foreign:n") %>%
-    select(estimate, p.value) %>%
-    rename(interaction_slope = estimate) %>%
-    mutate(lines_parallel = ifelse(p.value <= 0.05, F, T)) -> interaction_slope
-  
-  tidy(anova(m1, m2)) %>%
-    filter(!is.na(p.value)) %>%
-    select(p.value) %>%
-    mutate(interaction_model_beter = ifelse(p.value < 0.05, T, F)) -> anova_p_value
-  
-  community_slope_tbl %>%
-    rbind(cbind(community, interaction_slope, anova_p_value)) -> community_slope_tbl
+
+for(c in unique(community_geo_tbl$C)) {
+  for(t in unique(community_geo_tbl$Type)) {
+    message(c)
+    message(t)
+    community_geo_tbl %>%
+      filter(C==c, Type==t) %>%
+      select(MeanPO) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      MannKendall() %>%
+      summary()
+    
+    print("-----------------------")
+    
+    community_geo_tbl %>%
+      filter(C==c, Type==t) %>%
+      select(MeanPO) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      ts(frequency = 12, start = c(2014,10)) %>%
+      sens.slope() %>%
+      print()
+  }
 }
 
-community_slope_tbl
 
 # findings:
 # for national news, the mobility is greater from regional to legacy than regional to digital-born

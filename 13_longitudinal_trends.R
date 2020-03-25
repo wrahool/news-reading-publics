@@ -110,7 +110,7 @@ ggplot(digital_trends_tbl, aes(x=n, y=MeanPC)) +
   scale_colour_manual(values = c("sig_inc" = "skyblue1",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
-                                 "dec", "salmon"))
+                                 "dec" = "salmon"))
   
 # Indian National vs Indian Regional vs International media
 
@@ -194,7 +194,7 @@ ggplot(geographic_trends_tbl, aes(x=n, y=MeanPC)) +
   scale_colour_manual(values = c("sig_inc" = "blue",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
-                                 "dec", "salmon"))
+                                 "dec" = "salmon"))
 
 
 # English vs Vernacular
@@ -272,7 +272,7 @@ ggplot(language_trends_tbl, aes(x=n, y=MeanPC)) +
   scale_colour_manual(values = c("sig_inc" = "blue",
                                  "inc" = "skyblue1",
                                  "sig_dec" = "red",
-                                 "dec", "salmon"))
+                                 "dec" = "salmon"))
 
 
 #remove foreign outlets from English outlets, and only keep Indian outlets
@@ -421,14 +421,15 @@ summary(lm(centr~n, data = centr_df))
 
 all_media_breakdown = read_csv("03_Auxiliary/Fall 19/media_breakdown.csv")
 common_media = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
-months = read_csv("03_Auxiliary/Fall 19/months.csv")
+Months = read_csv("03_Auxiliary/Fall 19/months.csv")
 
 all_media_breakdown %>%
   filter(Media %in% common_media$Media) %>%
   select(Media, Digital) -> common_media_digital
 
-graphs_to_use = red_graphs_list
+graphs_to_use = filtered_graphs_list
 
+#
 temporal_tbl = NULL
 for(i in 1:length(graphs_to_use)) {
   g = graphs_to_use[[i]]
@@ -452,5 +453,44 @@ temporal_tbl %>%
   inner_join(ordered_months, by = c("Month" = "month")) %>%
   arrange(n) -> temporal_tbl
 
-ggplot(temporal_tbl, aes(x=n, y=(MeanDC), color = Type)) +
-  geom_smooth(method = "lm")
+slope_estimate_tbl = NULL
+for(t in unique(temporal_tbl$Type)) {
+  temporal_tbl %>%
+    filter(Type == t) %>%
+    select(MeanDC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Type = t) %>%
+    select(Type, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+temporal_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> temporal_tbl
+
+ggplot(temporal_tbl, aes(x=n, y=MeanDC)) +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Type, nrow=1, ncol=3) +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec" = "salmon"))
