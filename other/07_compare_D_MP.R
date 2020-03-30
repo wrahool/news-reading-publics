@@ -13,7 +13,7 @@ reqd_files = list.files("../01_IndiaData/../../04_Oxford/MP_D_comparison/CSV/Cle
 
 # Feb, Apr, May, Jul, Aug, Oct, Nov, Dec
 #reqd_months = c("February2017", "April2017", "May2017", "July2017", "August2017", "October2017", "November2017", "December2017")
-common_nodes = read_csv("03_Auxiliary/common_nodes.csv")
+common_nodes = read_csv("03_Auxiliary/Fall 19/common_nodes.csv")
 
 MP_df = NULL
 for(f in reqd_files) {
@@ -33,7 +33,7 @@ for(f in reqd_files) {
   MP_df %>% rbind(month_MP_KM) -> MP_df
 }
 
-media_breakdown = read_csv("03_Auxiliary/media_breakdown.csv")
+media_breakdown = read_csv("03_Auxiliary/Fall 19/media_breakdown.csv")
 
 media_breakdown %>%
   filter(Media %in% common_nodes$Media) %>%

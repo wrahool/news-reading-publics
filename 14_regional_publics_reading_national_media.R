@@ -109,8 +109,8 @@ ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n),
              color = "lightgrey")+
-  geom_point() +
-  geom_smooth(method = "lm") +
+  geom_point(size = 0.9) +
+  geom_smooth(method = "lm", size = 0.8) +
   scale_x_continuous(breaks = NULL)+
   facet_wrap(~C, nrow = 2)
 
@@ -144,6 +144,32 @@ for(community in regional_communities) {
   
   community_slope_tbl %>%
     rbind(cbind(community, interaction_slope, anova_p_value)) -> community_slope_tbl
+  
+  message(community)
+  message("Legacy")
+  
+  #with legacy
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    filter(Legacy == 1) %>%
+    select(MeanPO, n) %>%
+    lm(formula=(MeanPO ~ n)) %>%
+    summary() %>%
+    print()
+  
+  message(community)
+  message("Digital-born")
+  
+  #with digital
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    filter(Legacy == 0) %>%
+    select(MeanPO, n) %>%
+    lm(formula=(MeanPO ~ n)) %>%
+    summary() %>%
+    print()
 }
 
 
@@ -211,8 +237,8 @@ ggplot(community_digital_tbl, aes(x=n, y=MeanPO, color = Type)) +
                                  filter(grepl("January", Month)) %>% 
                                  select(n),n),
              color = "lightgrey")+
-  geom_point() +
-  geom_smooth(method = "lm") +
+  geom_point(size=0.9) +
+  geom_smooth(method = "lm", size=0.8) +
   scale_x_continuous(breaks = NULL)+
   facet_wrap(~C, nrow = 2)
 
@@ -247,6 +273,34 @@ for(community in regional_communities) {
   
   community_slope_tbl %>%
     rbind(cbind(community, interaction_slope, anova_p_value)) -> community_slope_tbl
+  
+  message(community)
+  message("Legacy")
+  
+  #with legacy
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    filter(Legacy == 1) %>%
+    select(MeanPO, n) %>%
+    lm(formula=(MeanPO ~ n)) %>%
+    summary() %>%
+    print()
+  
+  message(community)
+  message("Digital-born")
+  
+  #with digital
+  community_digital_tbl %>%
+    mutate(Legacy = ifelse(Type == "Legacy", 1, 0)) %>%
+    filter(C==paste0("Community 2.", community)) %>%
+    filter(Legacy == 0) %>%
+    select(MeanPO, n) %>%
+    lm(formula=(MeanPO ~ n)) %>%
+    summary() %>%
+    print()
+  
+  
 }
 
 

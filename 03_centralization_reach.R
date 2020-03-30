@@ -163,8 +163,10 @@ viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$Indian),]
 
 Indian_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Indian)) + 
   geom_point(size = 2, shape = 16) +
-  scale_color_brewer(palette="Dark2") +
-  labs(x = "log of degree centrality", y = "log of percentage reach")
+  theme_bw()+
+  scale_color_brewer(palette="Set1") +
+  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  theme(legend.position="bottom")
 
 
 #ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=Indian)) + 
@@ -176,23 +178,29 @@ viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$English),]
 
 English_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=English)) + 
   geom_point(size = 2, shape = 16) +
-  scale_color_brewer(palette="Set1") +
-  labs(x = "log of degree centrality", y = "log of percentage reach")
+  theme_bw()+
+  scale_color_manual(values=wes_palette(name="GrandBudapest1"))+
+  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  theme(legend.position="bottom")
 
 viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$Regional),]
 
-Regional_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Regional)) + 
-  geom_point(size = 2) + 
-  scale_color_brewer(palette="Set2") +
-  labs(x = "log of degree centrality", y = "log of percentage reach")
+Regional_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=paste(Regional,Indian))) + 
+  geom_point(size = 2) +
+  theme_bw()+
+  scale_color_brewer(palette="Dark2") +
+  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  theme(legend.position="bottom")
 
 
 viz.df = avg.dc.pr.full.df[!is.na(avg.dc.pr.full.df$Digital),]
 
 Digital_p = ggplot(viz.df, aes(x=log(avg.dc), y=log(avg.pr), color=Digital)) + 
   geom_point(size = 2, shape = 16) +
-  scale_color_brewer(palette="Set1") +
-  labs(x = "log of degree centrality", y = "log of percentage reach")
+  theme_bw()+
+  scale_color_manual(values=wes_palette(name="Royal1"))+
+  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  theme(legend.position="bottom")
 
 ggarrange(Indian_p, Regional_p, English_p, Digital_p, 
           labels = c("A", "B", "C", "D"),

@@ -339,20 +339,31 @@ KM_master_df %>%
   inner_join(common_nodes_breakdown) -> media_km
 
 p1 <- ggplot(media_km) +
-  geom_point(aes(x=MeanPC, y=MeanATV, color=Regional)) +
-  theme_bw()
+  geom_point(aes(x=MeanPC, y=MeanATV, color=paste(Regional, Indian))) +
+  scale_color_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(legend.position="bottom")
 
 p2 <- ggplot(media_km) +
   geom_point(aes(x=MeanPC, y=MeanATV, color=Digital)) +
-  theme_bw()
+  scale_color_manual(values=wes_palette(name="Royal1"))+
+  theme_bw() +
+  theme(legend.position="bottom")
+
 
 p3 <- ggplot(media_km) +
   geom_point(aes(x=MeanPC, y=MeanATV, color=Indian)) +
-  theme_bw()
+  scale_color_brewer(palette="Set1") +
+  theme_bw()+
+  theme(legend.position="bottom")
+
 
 p4 <- ggplot(media_km) +
   geom_point(aes(x=MeanPC, y=MeanATV, color=English)) +
-  theme_bw()
+  scale_color_manual(values=wes_palette(name="GrandBudapest1"))+
+  theme_bw()+
+  theme(legend.position="bottom")
+
 
 
 grid.arrange(p1, p2, p3, p4, nrow = 2)

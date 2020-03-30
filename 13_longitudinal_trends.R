@@ -197,6 +197,7 @@ ggplot(geographic_trends_tbl, aes(x=n, y=MeanPC)) +
                                  "dec" = "salmon"))
 
 
+#Panel C
 # English vs Vernacular
 KM_master_tbl %>%
   inner_join(all_media_breakdown) %>%
@@ -224,9 +225,9 @@ for(t in unique(language_trends_tbl$Type)) {
     lm() %>%
     get_regression_table() %>%
     filter(term == "n") %>% # get the row corresponding to n, not the intercept
-    select(estimate, p_value) %>%
+    select(estimate, lower_ci, upper_ci, p_value) %>%
     mutate(Type = t) %>%
-    select(Type, estimate, p_value) %>%
+    select(Type, estimate, lower_ci, upper_ci, p_value) %>%
     mutate(Slope = ifelse(estimate < 0,
                           ifelse(p_value <= 0.05,
                                  "sig_dec", "dec"),
@@ -302,9 +303,9 @@ for(t in unique(language_trends_tbl$Type)) {
     lm() %>%
     get_regression_table() %>%
     filter(term == "n") %>% # get the row corresponding to n, not the intercept
-    select(estimate, p_value) %>%
+    select(estimate, lower_ci, upper_ci, p_value) %>%
     mutate(Type = t) %>%
-    select(Type, estimate, p_value) %>%
+    select(Type, estimate, lower_ci, upper_ci, p_value) %>%
     mutate(Slope = ifelse(estimate < 0,
                           ifelse(p_value <= 0.05,
                                  "sig_dec", "dec"),
@@ -326,6 +327,8 @@ for(t in unique(language_trends_tbl$Type)) {
 #CI
 #English  Indian outlets
 0.003323 + (c(-1.96, 1.96) * 0.002111)
+
+#
 
 # foreign English outlets
 KM_master_tbl %>%

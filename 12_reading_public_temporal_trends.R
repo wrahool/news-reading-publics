@@ -3,6 +3,7 @@ library(tidyverse)
 library(directlabels)
 library(moderndive)
 
+
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
 KM_master_tbl = read_csv("03_Auxiliary/Fall 19/km_master.csv")
@@ -80,6 +81,20 @@ ggplot(trends_tbl, aes(y=MeanPC, x=n)) +
 c = 1
 c_estimate_tbl = NULL
 for(c in 1:max(WT$membership)) {
+  message(c)
+  trends_tbl %>%
+    filter(Community == paste0("Community 1.",c)) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    summary() %>% print()
+  
+  
+  trends_tbl %>%
+    filter(Community == paste0("Community 1.",c)) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_summaries()
+  
   trends_tbl %>%
     filter(Community == paste0("Community 1.",c)) %>%
     select(MeanPC, n) %>%
@@ -215,15 +230,24 @@ ggplot(trends_tbl_without_singles, aes(y=MeanPC, x=n)) +
 c = 1
 c_estimate_tbl = NULL
 for(c in 1:max(WT2$membership)) {
+  message(c)
+  
   trends_tbl %>%
-  filter(Community == paste0("Community 2.",c)) %>%
-  select(MeanPC, n) %>%
-  lm() %>%
-  get_regression_table() %>%
-  filter(term == "n") %>% # get the row corresponding to n, not the intercept
-  select(estimate, p_value) %>%
-  mutate(Community = paste0("Community 2.",c)) %>%
-  select(Community, estimate, p_value) -> c_estimate
+    filter(Community == paste0("Community 2.",c)) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    summary() %>%
+    print()
+  
+  trends_tbl %>%
+    filter(Community == paste0("Community 2.",c)) %>%
+    select(MeanPC, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Community = paste0("Community 2.",c)) %>%
+    select(Community, estimate, p_value) -> c_estimate
   
   bind_rows(c_estimate_tbl, c_estimate) -> c_estimate_tbl
 }
