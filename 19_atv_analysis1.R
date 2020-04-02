@@ -364,59 +364,180 @@ p4 <- ggplot(media_km) +
   theme_bw()+
   theme(legend.position="bottom")
 
-
-
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 
-# trends in Regional v National
+
+#longitudinal analysis ATV
 
 KM_ATV_master_df %>%
   filter(Media %in% common_nodes$Media) %>%
   inner_join(ordered_months) %>%
   inner_join(common_nodes_breakdown) %>%
-  filter(Indian == "Y") %>%
-  select(n, Month, Media, Regional, ATV) %>%
-  group_by(n, Month, Regional) %>%
-  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> regional_trends_tbl
+  select(n, Month, Media, Digital, ATV) %>%
+  group_by(n, Month, Digital) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> i_digital_trends_tbl
 
-ggplot(regional_trends_tbl, aes(x=n, y=medianATV)) +
-  geom_point(aes(color = Regional))
+ggplot(i_digital_trends_tbl, aes(x=n, y=medianATV)) +
+  geom_point(aes(color = Digital))
 
-ggplot(regional_trends_tbl, aes(x=n, y=meanATV, color = Regional)) +
+ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point() +
+  theme_bw() +
+  facet_wrap(~Digital, ncol = 2)
+
+
+library(moderndive)
+
+slope_estimate_tbl = NULL
+for(t in unique(i_digital_trends_tbl$Digital)) {
+  i_digital_trends_tbl %>%
+    filter(Digital == t) %>%
+    ungroup() %>%
+    select(meanATV, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(Digital = t) %>%
+    select(Digital, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+for(t in unique(i_digital_trends_tbl$Digital)) {
+  message(t)
+  print(i_digital_trends_tbl %>%
+          filter(Digital == t) %>%
+          ungroup() %>%
+          select(meanATV, n) %>%
+          lm() %>%
+          summary())
+}
+
+#Legacy
+0.2777 + c(-1.96, 1.96)*0.0111
+
+#Digital-born
+0.19566 + c(-1.96, 1.96)*0.01297
+
+i_digital_trends_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> i_digital_trends_tbl
+
+ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_point() +
+  theme_bw() +
+  facet_wrap(~Digital, ncol = 2)
+
+i_digital_trends_tbl$Digital <- factor(i_digital_trends_tbl$Digital, levels = c("Y", "N"))
+
+p1 <- ggplot(i_digital_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~Digital, nrow=1, ncol=3) +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec" = "salmon"))
+
+
+# trends in Regional v National v International
+KM_ATV_master_df %>%
+  filter(Media %in% common_nodes$Media) %>%
+  inner_join(ordered_months) %>%
+  inner_join(common_nodes_breakdown) %>%
+  mutate(IndianRegional = paste(Indian, Regional, sep="_")) %>%
+  select(n, Month, Media, IndianRegional, ATV) %>%
+  group_by(n, Month, IndianRegional) %>%
+  summarize(meanATV = mean(ATV), medianATV = median(ATV)) %>%
+  ungroup() -> regional_trends_tbl
+
+
+ggplot(regional_trends_tbl, aes(x=n, y=meanATV, color = IndianRegional)) +
   geom_smooth(method="lm") +
   geom_point() +
   theme_bw()
 
-KM_ATV_master_df %>%
-  filter(Media %in% common_nodes$Media) %>%
-  inner_join(ordered_months) %>%
-  inner_join(common_nodes_breakdown) %>%
-  filter(Indian == "Y") %>%
-  select(n, Month, Media, Regional, ATV) -> boxplot_regional_trends_tbl
 
-ggplot(boxplot_regional_trends_tbl) +
-    geom_boxplot(aes(x=n, y=ATV, group=interaction(n, Regional), fill = Regional)) +
-    coord_cartesian(xlim = NULL, ylim = c(0,20))
-    
+slope_estimate_tbl = NULL
+for(t in unique(regional_trends_tbl$IndianRegional)) {
+  regional_trends_tbl %>%
+    filter(IndianRegional == t) %>%
+    ungroup() %>%
+    select(meanATV, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(IndianRegional = t) %>%
+    select(IndianRegional, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+for(t in unique(regional_trends_tbl$IndianRegional)) {
+  message(t)
+  print(regional_trends_tbl %>%
+          filter(IndianRegional == t) %>%
+          ungroup() %>%
+          select(meanATV, n) %>%
+          lm() %>%
+          summary())
+}
+
+#International (ie, N_N)
+0.049049 + c(-1.96, 1.96)*0.003435
+
+#Regional (ie, Y_N)
+0.31608 + c(-1.96, 1.96)*0.01906
+
+#Indian (ie, Y_Y)
+0.42478 + c(-1.96, 1.96)*0.02098
+
+regional_trends_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> regional_trends_tbl
 
 
-# trends in Indian v International
-
-KM_ATV_master_df %>%
-  filter(Media %in% common_nodes$Media) %>%
-  inner_join(ordered_months) %>%
-  inner_join(common_nodes_breakdown) %>%
-  select(n, Month, Media, Indian, ATV) %>%
-  group_by(n, Month, Indian) %>%
-  summarize(meanATV = mean(ATV), medianATV = median(ATV)) -> indian_trends_tbl
-
-ggplot(indian_trends_tbl, aes(x=n, y=medianATV)) +
-  geom_point(aes(color = Indian))
-
-ggplot(indian_trends_tbl, aes(x=n, y=meanATV, color = Indian)) +
-  geom_smooth(method = "lm") +
+p2 <- ggplot(regional_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
   geom_point() +
-  theme_bw()
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~IndianRegional, nrow=1, ncol=3) +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec" = "salmon"))
+
+
+
 
 # trends in English v Vernacular
 
@@ -436,7 +557,7 @@ ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# put both as regional
+# put both as national
 KM_ATV_master_df %>%
   filter(Media %in% common_nodes$Media) %>%
   inner_join(ordered_months) %>%
@@ -445,7 +566,7 @@ KM_ATV_master_df %>%
   select(n, Month, Media, English, ATV) %>%
   group_by(n, Month, English) %>%
   summarize(meanATV = mean(ATV), medianATV = median(ATV)) %>%
-  mutate(English = ifelse(English %in% c("B", "N"), "N", "Y")) -> english_trends_tbl
+  mutate(English = ifelse(English %in% c("B", "Y"), "Y", "N")) -> english_trends_tbl
 
 ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
   geom_point() +
@@ -453,6 +574,73 @@ ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
   theme_bw()
 
 
+slope_estimate_tbl = NULL
+for(t in unique(english_trends_tbl$English)) {
+  english_trends_tbl %>%
+    filter(English == t) %>%
+    ungroup() %>%
+    select(meanATV, n) %>%
+    lm() %>%
+    get_regression_table() %>%
+    filter(term == "n") %>% # get the row corresponding to n, not the intercept
+    select(estimate, p_value) %>%
+    mutate(English = t) %>%
+    select(English, estimate, p_value) %>%
+    mutate(Slope = ifelse(estimate < 0,
+                          ifelse(p_value <= 0.05,
+                                 "sig_dec", "dec"),
+                          ifelse(p_value <= 0.05,
+                                 "sig_inc", "inc"))) -> c_estimate
+  
+  bind_rows(slope_estimate_tbl, c_estimate) -> slope_estimate_tbl
+}
+
+for(t in unique(english_trends_tbl$English)) {
+  message(t)
+  print(english_trends_tbl %>%
+          filter(English == t) %>%
+          ungroup() %>%
+          select(meanATV, n) %>%
+          lm() %>%
+          summary())
+}
+
+#English
+0.3836 + c(-1.96, 1.96)*0.0578
+
+#Vernacular
+0.58289 + c(-1.96, 1.96)*0.02677
+
+english_trends_tbl %>%
+  inner_join(slope_estimate_tbl) %>%
+  select(-c(estimate,p_value)) -> english_trends_tbl
+
+
+english_trends_tbl$English <- factor(english_trends_tbl$English, levels = c("Y", "N"))
+
+
+p3 <- ggplot(english_trends_tbl, aes(x=n, y=meanATV)) +
+  geom_vline(xintercept = pull(ordered_months %>% 
+                                 filter(grepl("January", Month)) %>% 
+                                 select(n),n), 
+             color = "lightgrey") +
+  theme_bw() +
+  theme(axis.text=element_text(size=13),
+        strip.text.x = element_text(size = 14, colour = "black"),
+        legend.position = "none") +
+  geom_point() +
+  geom_smooth(aes(color = Slope), method = "lm", formula = y ~ x) +
+  scale_x_continuous(breaks = NULL) +
+  facet_wrap(~English, nrow=1, ncol=3) +
+  scale_colour_manual(values = c("sig_inc" = "blue",
+                                 "inc" = "skyblue1",
+                                 "sig_dec" = "red",
+                                 "dec" = "salmon"))
+
+
+
+
+#not reported in diss as they are not interesting
 # trends in Indian Digital v Legacy
 
 KM_ATV_master_df %>%
