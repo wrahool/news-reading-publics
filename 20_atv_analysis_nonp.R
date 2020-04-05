@@ -125,17 +125,17 @@ ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# put both as national
+# put both as national (doesn't change if you put Both as Vernacular)
 KM_ATV_master_df %>%
   filter(Media %in% common_nodes$Media) %>%
   inner_join(ordered_months) %>%
   inner_join(common_nodes_breakdown) %>%
   filter(Indian == "Y") %>%
   select(n, Month, Media, English, ATV) %>%
+  mutate(English = ifelse(English %in% c("B", "Y"), "Y", "N")) %>%
   group_by(n, Month, English) %>%
   summarize(meanATV = mean(ATV), medianATV = median(ATV)) %>%
-  ungroup() %>%
-  mutate(English = ifelse(English %in% c("B", "Y"), "Y", "N")) -> english_trends_tbl
+  ungroup() -> english_trends_tbl
 
 ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
   geom_point() +
@@ -162,7 +162,7 @@ for(t in unique(english_trends_tbl$English)) {
 }
 
 #English
-#0.09920823 0.22805281
+# 0.1902319 0.2464286
 
 #Vernacular
 #0.4969376 0.6340711

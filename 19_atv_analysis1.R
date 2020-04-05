@@ -507,11 +507,11 @@ for(t in unique(regional_trends_tbl$IndianRegional)) {
 #International (ie, N_N)
 0.049049 + c(-1.96, 1.96)*0.003435
 
-#Regional (ie, Y_N)
-0.31608 + c(-1.96, 1.96)*0.01906
-
-#Indian (ie, Y_Y)
+#Regional (ie, Y_Y)
 0.42478 + c(-1.96, 1.96)*0.02098
+
+#Indian (ie, Y_N)
+0.31608 + c(-1.96, 1.96)*0.01906
 
 regional_trends_tbl %>%
   inner_join(slope_estimate_tbl) %>%
@@ -564,9 +564,9 @@ KM_ATV_master_df %>%
   inner_join(common_nodes_breakdown) %>%
   filter(Indian == "Y") %>%
   select(n, Month, Media, English, ATV) %>%
+  mutate(English = ifelse(English %in% c("B", "Y"), "Y", "N")) %>%
   group_by(n, Month, English) %>%
-  summarize(meanATV = mean(ATV), medianATV = median(ATV)) %>%
-  mutate(English = ifelse(English %in% c("B", "Y"), "Y", "N")) -> english_trends_tbl
+  summarize(meanATV = mean(ATV), medianATV = median(ATV))-> english_trends_tbl
 
 ggplot(english_trends_tbl, aes(x=n, y=meanATV, color = English)) +
   geom_point() +
@@ -606,7 +606,7 @@ for(t in unique(english_trends_tbl$English)) {
 }
 
 #English
-0.3836 + c(-1.96, 1.96)*0.0578
+0.22915 + c(-1.96, 1.96)*0.01421
 
 #Vernacular
 0.58289 + c(-1.96, 1.96)*0.02677
