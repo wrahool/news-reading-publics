@@ -16,4 +16,5 @@ ggplot(df_long) +
   ylim(c(0,100)) +
   theme(panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank())+
   theme(legend.position = "bottom") +
-  scale_x_continuous(breaks=seq(2015, 2019, 1))
+  scale_x_continuous(breaks=seq(2015, 2019, 1))+
+  theme(text = element_text(size=20))

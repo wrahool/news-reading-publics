@@ -38,7 +38,7 @@ newspapers_tbl = read_csv("../../newspapers_IRS_data.csv")
 newspapers_tbl %>%
   gather(Year, Readership, -Newspaper, -Type) -> newspapers_tbl
 
-p1 = ggplot(data = newspapers_tbl, aes(x=Type, y=Readership, fill = Type)) +
+p1 = ggplot(data = newspapers_tbl, aes(x=Type, y=log(Readership), fill = Type)) +
   geom_boxplot() +
   #geom_point(position=position_jitterdodge()) +
   ylab("Readership in thousands") +
@@ -49,7 +49,8 @@ p1 = ggplot(data = newspapers_tbl, aes(x=Type, y=Readership, fill = Type)) +
                                          "Other" = "darkorange2"))+
   theme(axis.text=element_text(size=13),
         strip.text.x = element_text(size = 14, colour = "black"),
-        legend.position="none")
+        legend.position="none")+
+  theme(text = element_text(size=20))
 
 
 # read community as nodes data to compare with newspaper

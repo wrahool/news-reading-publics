@@ -182,10 +182,15 @@ comm_g2_EL %>%
          edgeType = ifelse(edgeType == "international_national", "national_international", edgeType)) %>%
   mutate(edgeType = as.factor(edgeType)) -> comm_edge_df
 
+library(wesanderson)
 
-ggplot(comm_edge_df, aes(x=edgeType, y=weight/1000000)) +
-  geom_boxplot() +
-  theme_bw()
+ggplot(comm_edge_df, aes(x=edgeType, y=weight/1000000, fill=edgeType)) +
+  geom_boxplot(lwd=0.1) +
+  #scale_fill_manual(values = wes_palette("Moonrise3")) +
+  theme_bw()+
+  theme(text = element_text(size=20)) +
+  theme(legend.position = "none")
+
 
 wilcox.test(comm_edge_df[comm_edge_df$edgeType == "regional_regional",]$weight,
             comm_edge_df[comm_edge_df$edgeType == "regional_international",]$weight,

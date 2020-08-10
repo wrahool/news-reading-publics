@@ -320,3 +320,11 @@ ggplot(sim_homogenieities_df) +
   geom_vline(xintercept = obs_homo2, linetype = "dashed", color = "red") +
   xlim(0, 1) +
   theme_bw()
+
+ggplot(sim_homogenieities_df) + 
+  geom_density(aes(x=sim_homogenieities)) +
+  geom_vline(xintercept = quantile(sim_homogenieities, 0.95)) +
+  # geom_vline(xintercept = obs_homo, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = obs_homo2, linetype = "dashed", color = "red") +
+  xlim(0, 1) +
+  theme_bw()

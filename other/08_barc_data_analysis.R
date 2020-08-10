@@ -19,7 +19,8 @@ ggplot(plot_df, aes(x=week, y=impressions*1000 / 1000000)) +
   scale_color_brewer(palette="Paired") +
   #scale_color_manual(values=my_palette) +
   scale_x_continuous(breaks=seq(1, 13, 1), minor_breaks = NULL) +
-  theme_bw()
+  theme_bw()+
+  theme(text = element_text(size=20))
 
 library(randomcoloR)
 n <- 9

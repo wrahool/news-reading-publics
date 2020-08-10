@@ -149,9 +149,15 @@ ggplot(comm_ATV_tbl3, aes(x=as.character(comm), y = MonthlyMean)) +
   geom_boxplot()
 
 ggplot(comm_ATV_tbl3) +
-  geom_density(aes(x=MonthlyMean)) +
-  facet_grid(rows = vars(comm)) +
-  theme_bw()
+  geom_density(aes(x=MonthlyMean, fill = comm)) +
+  #facet_grid(rows = vars(comm)) +
+  facet_wrap(~comm, ncol=1) +
+  theme_bw() +
+  theme(text = element_text(size=20))
+
+library(ggridges)
+ggplot(comm_ATV_tbl3, aes(x = comm, y = MonthlyMean)) + geom_density_ridges()
+
 
 ggplot(comm_ATV_tbl3, aes(x=MonthlyMean, fill=as.factor(comm), color = as.factor(comm))) + 
   geom_density(alpha=0.4) +
@@ -339,30 +345,35 @@ KM_master_df %>%
   inner_join(common_nodes_breakdown) -> media_km
 
 p1 <- ggplot(media_km) +
-  geom_point(aes(x=MeanPC, y=MeanATV, color=paste(Regional, Indian))) +
+  geom_point(aes(x=log(MeanPC), y=log(MeanATV), color=paste(Regional, Indian))) +
   scale_color_brewer(palette="Dark2") +
   theme_bw() +
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  theme(text = element_text(size=20))
 
 p2 <- ggplot(media_km) +
-  geom_point(aes(x=MeanPC, y=MeanATV, color=Digital)) +
+  geom_point(aes(x=log(MeanPC), y=log(MeanATV), color=Digital)) +
   scale_color_manual(values=wes_palette(name="Royal1"))+
   theme_bw() +
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  theme(text = element_text(size=20))
 
 
 p3 <- ggplot(media_km) +
-  geom_point(aes(x=MeanPC, y=MeanATV, color=Indian)) +
+  geom_point(aes(x=log(MeanPC), y=log(MeanATV), color=Indian)) +
   scale_color_brewer(palette="Set1") +
   theme_bw()+
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  theme(text = element_text(size=20))
 
+library("wesanderson")
 
 p4 <- ggplot(media_km) +
-  geom_point(aes(x=MeanPC, y=MeanATV, color=English)) +
+  geom_point(aes(x=log(MeanPC), y=log(MeanATV), color=English)) +
   scale_color_manual(values=wes_palette(name="GrandBudapest1"))+
   theme_bw()+
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  theme(text = element_text(size=20))
 
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 

@@ -14,4 +14,5 @@ ggplot(df_long) +
   ylim(c(0, 100)) +
   xlim(c(1990, 2020)) +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  theme(text = element_text(size=20))

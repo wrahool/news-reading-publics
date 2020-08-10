@@ -17,4 +17,5 @@ ggplot(df_long) +
   ylim(c(0,100)) +
   xlim(c(2014, 2019)) +
   theme(panel.grid.minor.x = element_blank(), panel.grid.major.x = element_blank())+
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom")+
+  theme(text = element_text(size=20))
