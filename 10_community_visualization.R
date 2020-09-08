@@ -89,8 +89,8 @@ library(igraph)
 
 type = "simple"
 
-nodes = read.csv(paste0("03_Auxiliary/", type,"_walktrap_community_features.csv"), as.is = TRUE)
-links = read.csv(paste0("03_Auxiliary/", type,"_WT_community_network.csv"), as.is = TRUE)
+nodes = read.csv(paste0("03_Auxiliary/Fall 19/", type,"_walktrap_community_features.csv"), as.is = TRUE)
+links = read.csv(paste0("03_Auxiliary/Fall 19/", type,"_WT_community_network.csv"), as.is = TRUE)
 
 
 names(links)[1:2] = c("from", "to")
@@ -104,15 +104,20 @@ colfunc <- colorRampPalette(c("orangered", "orangered4"))
 V(net)$color <- colfunc(11)[round(V(net)$mean_UV * 10 / max(V(net)$mean_UV))+1]
 
 # l <- layout_with_fr(net)
-load("03_Auxiliary/simple_WT_layout.Rdata")
+load("03_Auxiliary/Fall 19/simple_WT_layout.Rdata")
 
-plot(net, edge.arrow.size=.2,
-     # edge.color="black",
+plot.igraph(net, edge.arrow.size=0.1,
      vertex.frame.color="#ffffff",
      vertex.label=V(net)$comm,
-     #vertex.label=NA,
      vertex.label.color="black",
      layout = l) 
+
+plot.igraph(net,
+            vertex.frame.color="#ffffff",
+            vertex.label=NA,
+            layout = l,
+            frame = T,
+            margin = c(-0.3,-0.3,-0.3,-0.3))
 
 # save(l, file = "03_Auxiliary/simple_WT_layout.Rdata")
 
