@@ -1,9 +1,9 @@
 library(readr)
 library(dplyr)
 library(igraph)
+library(ggplot2)
 library(lfe)
-library(gridExtra)
-
+library(cowplot)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
@@ -38,7 +38,7 @@ region_plot <- ggplot(regional_trends, aes(x=n, y=MeanPC, color = Region)) +
   facet_grid(~Region) +
   geom_smooth(method = "lm") +
   theme_bw() +
-  labs(x = "Month", y = "Mean Percent Reach") +
+  labs(x = "Month", y = "Mean Percent Reach (%)") +
   theme(legend.position = "none")
 
 lm(MeanPC ~ n + as.factor(Region), regional_trends) %>%
@@ -78,7 +78,7 @@ digital_plot <- ggplot(digital_trends, aes(x=n, y=MeanPC, color = Digital)) +
   facet_grid(~Digital) +
   geom_smooth(method = "lm") +
   theme_bw() +
-  labs(x = "Month", y = "Mean Percent Reach") +
+  labs(x = "Month", y = "Mean Percent Reach (%)") +
   theme(legend.position = "none")
 
 # english
@@ -106,7 +106,7 @@ english_plot <- ggplot(english_trends, aes(x=n, y=MeanPC, color = English)) +
   facet_grid(~English) +
   geom_smooth(method = "lm") +
   theme_bw() +
-  labs(x = "Month", y = "Mean Percent Reach") +
+  labs(x = "Month", y = "Mean Percent Reach (%)") +
   theme(legend.position = "none")
 
 
@@ -167,8 +167,8 @@ v2n_plot <- ggplot(all_vernacular_to_national_tbl, aes(x=n, y=MeanPO, color = Ty
   geom_point() +
   geom_smooth(method = "lm") +
   theme_bw() +
-  theme(legend.position="bottom") +
-  labs(x = "Month", y = "Mean Percent Overlap of Vernacular Media with National Media", col = "Type of National Media")
+  labs(x = "Month", y = expression(atop("Mean Percent Overlap of Vernacular Media", paste("with National Media (%)"))), col = "Type of National Media") +
+  theme(legend.position="bottom")
 
 
 lm(MeanPO ~ n + Type, all_vernacular_to_national_tbl) %>% summary()
@@ -233,7 +233,7 @@ v2i_plot <- ggplot(all_vernacular_to_international_tbl, aes(x=n, y=MeanPO, color
   geom_point() +
   geom_smooth(method = "lm") +
   theme_bw() +
-  labs(x = "Month", y = "Mean Percent Overlap of Vernacular Media with International Media", col = "Type of International Media") +
+  labs(x = "Month", y = expression(atop("Mean Percent Overlap of Vernacular Media", paste("with International Media (%)"))), col = "Type of International Media") +
   theme(legend.position="bottom")
 
 lm(MeanPO ~ n + as.factor(Type), all_vernacular_to_international_tbl) %>% summary()
@@ -263,5 +263,5 @@ mobility_international <- all_months_edgelist %>%
 
 felm(PercentOveralap ~ n + Type | 0 | 0 | VernacularMedia, mobility_international) %>% summary()
 
-grid.arrange(region_plot, digital_plot, english_plot, nrow = 3)
-grid.arrange(v2n_plot, v2i_plot, nrow = 2)
+p2 <- plot_grid(region_plot, digital_plot, english_plot, ncol = 1, labels = c("A", "B", "C"))
+p3 <- plot_grid(v2n_plot, v2i_plot, ncol = 1, align = "v", labels = c("A", "B"))

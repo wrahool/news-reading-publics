@@ -2,10 +2,12 @@ rm(list = ls())
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
-library(tidyverse)
+library(readr)
+library(dplyr)
 library(gridExtra)
 library(igraph)
-library(cowplot)
+library(lfe)
+library(ggplot2)
 
 TI_ATV_df = read_csv("03_Auxiliary/Fall 19/total_internet_atv.csv")
 KM_ATV_master_df = read_csv("03_Auxiliary/Fall 19/km_atv_master.csv")
@@ -91,6 +93,7 @@ regional_atv <- common_nodes_breakdown_ATV %>%
 
 regional_p <- ggplot(regional_atv, aes(x=MeanATV, fill=Region, color = Region)) + 
   geom_density(alpha=0.4) +
+  labs(x = "Mean Average Time Spent per Visitor per Month (minutes)") +
   theme_bw()
 
 # english vs vernacular
@@ -101,6 +104,7 @@ language_atv <- common_nodes_breakdown_ATV %>%
 
 language_p <- ggplot(language_atv, aes(x=MeanATV, fill=Language, color = Language)) +
   geom_density(alpha = 0.4) +
+  labs(x = "Mean Average Time Spent per Visitor per Month (minutes)") +
   theme_bw()
 
 # Digital-born vs legacy
@@ -111,11 +115,10 @@ digital_atv <- common_nodes_breakdown_ATV %>%
 
 digital_p <- ggplot(digital_atv, aes(x=MeanATV, fill = Type, color = Type)) +
   geom_density(alpha = 0.4) +
+  labs(x = "Mean Average Time Spent per Visitor per Month (minutes)") +
   theme_bw()
 
-plot_grid(regional_p, language_p, digital_p, align = "v", labels = c("A", "B", "C"), ncol = 1)
-
-
+##################################################################
 #monthly ATV trends
 KM_ATV_master_df %>%
   group_by(Month) %>%
@@ -148,10 +151,10 @@ KM_ATV_master_df_common_breakdown <- KM_ATV_master_df_common %>%
   merge(common_nodes_breakdown) %>%
   mutate(Region = paste0(Indian, English)) %>%
   mutate(Region = ifelse(Region == "YN", "Regional",
-                         ifelse(Region == "YY", "English", "International"))) %>%
+                         ifelse(Region == "YY", "National", "International"))) %>%
   mutate(English = ifelse(English %in% c("Y", "B"), "English", "Vernacular")) %>%
   rename(Language = English) %>%
-  mutate(Digital = ifelse(Digital == "Y", "Digital-born", "Lgeacy")) %>%
+  mutate(Digital = ifelse(Digital == "Y", "Digital-born", "Legacy")) %>%
   rename(Type = Digital) %>%
   merge(ordered_months)
 
@@ -161,12 +164,30 @@ KM_regional_ATV_trends <- KM_ATV_master_df_common_breakdown %>%
   group_by(n, Region) %>%
   summarize(MeanATV = mean(ATV))
 
-ggplot(KM_regional_ATV_trends, aes(x=n, y=MeanATV)) +
+regional_atv_trends_p <- ggplot(KM_regional_ATV_trends, aes(x=n, y=MeanATV)) +
   geom_point(color = "black") +
   facet_grid(~Region) +
   geom_smooth(method = "lm") +
+  labs(x = "Month", y = expression(atop("Mean Average Time Spent", paste("per Visitor per Month (minutes)")))) +
   theme_bw()
 
+# model
+
+for(r in unique(KM_regional_ATV_trends$Region)) {
+  print(r)
+  lm(MeanATV ~ n, data = KM_regional_ATV_trends[KM_regional_ATV_trends$Region == r,]) %>%
+    summary() %>%
+    print()
+}
+
+lm(MeanATV ~ n + Region, data = KM_regional_ATV_trends) %>%
+  summary() %>%
+  print()
+
+# robust
+felm(ATV ~ n + Region | 0 | 0 | Media, KM_ATV_master_df_common_breakdown) %>%
+  summary() %>%
+  print()
 
 # English vs Vernavular
 
@@ -174,11 +195,30 @@ KM_language_ATV_trends <- KM_ATV_master_df_common_breakdown %>%
   group_by(n, Language) %>%
   summarize(MeanATV = mean(ATV))
 
-ggplot(KM_language_ATV_trends, aes(x=n, y=MeanATV)) +
+language_atv_trends_p <- ggplot(KM_language_ATV_trends, aes(x=n, y=MeanATV)) +
   geom_point(color = "black") +
   facet_grid(~Language) +
   geom_smooth(method = "lm") +
+  labs(x = "Month", y = expression(atop("Mean Average Time Spent", paste("per Visitor per Month (minutes)")))) +
   theme_bw()
+
+# model
+
+for(l in unique(KM_language_ATV_trends$Language)) {
+  print(l)
+  lm(MeanATV ~ n, data = KM_language_ATV_trends[KM_language_ATV_trends$Language == l,]) %>%
+    summary() %>%
+    print()
+}
+
+lm(MeanATV ~ n + Language, data = KM_language_ATV_trends) %>%
+  summary() %>%
+  print()
+
+# robust
+felm(ATV ~ n + Language | 0 | 0 | Media, KM_ATV_master_df_common_breakdown) %>%
+  summary() %>%
+  print()
 
 
 # Digital-born vs Legacy
@@ -187,11 +227,30 @@ KM_type_ATV_trends <- KM_ATV_master_df_common_breakdown %>%
   group_by(n, Type) %>%
   summarize(MeanATV = mean(ATV))
 
-ggplot(KM_type_ATV_trends, aes(x=n, y=MeanATV)) +
+type_atv_trends_p <- ggplot(KM_type_ATV_trends, aes(x=n, y=MeanATV)) +
   geom_point(color = "black") +
   facet_grid(~Type) +
   geom_smooth(method = "lm") +
+  labs(x = "Month", y = expression(atop("Mean Average Time Spent", paste("per Visitor per Month (minutes)")))) +
   theme_bw()
+
+# model
+
+for(t in unique(KM_type_ATV_trends$Type)) {
+  print(t)
+  lm(MeanATV ~ n, data = KM_type_ATV_trends[KM_type_ATV_trends$Type == t,]) %>%
+    summary() %>%
+    print()
+}
+
+lm(MeanATV ~ n + Type, data = KM_type_ATV_trends) %>%
+  summary() %>%
+  print()
+
+# robust
+felm(ATV ~ n + Type | 0 | 0 | Media, KM_ATV_master_df_common_breakdown) %>%
+  summary() %>%
+  print()
 
 # Indian digital-born vs Legacy
 
@@ -200,12 +259,31 @@ KM_i_type_ATV_trends <- KM_ATV_master_df_common_breakdown %>%
   group_by(n, Type) %>%
   summarize(MeanATV = mean(ATV))
 
-ggplot(KM_i_type_ATV_trends, aes(x=n, y=MeanATV)) +
+indian_type_atv_trends_p <- ggplot(KM_i_type_ATV_trends, aes(x=n, y=MeanATV)) +
   geom_point(color = "black") +
   facet_grid(~Type) +
   geom_smooth(method = "lm") +
+  labs(x = "Month", y = expression(atop("Mean Average Time Spent", paste("per Visitor per Month (minutes)")))) +
   theme_bw()
 
+# model
 
+for(t in unique(KM_i_type_ATV_trends$Type)) {
+  print(t)
+  lm(MeanATV ~ n, data = KM_i_type_ATV_trends[KM_i_type_ATV_trends$Type == t,]) %>%
+    summary() %>%
+    print()
+}
 
+lm(MeanATV ~ n + Type, data = KM_i_type_ATV_trends) %>%
+  summary() %>%
+  print()
 
+# robust
+felm(ATV ~ n + Type | 0 | 0 | Media, KM_ATV_master_df_common_breakdown %>%
+       filter(Region %in% c("Regional", "National"))) %>%
+  summary() %>%
+  print()
+
+p4 <- plot_grid(regional_p, language_p, digital_p, align = "v", labels = c("A", "B", "C"), ncol = 1)
+p5 <- plot_grid(regional_atv_trends_p, language_atv_trends_p, type_atv_trends_p, labels = c("A", "B", "C"), ncol = 1)

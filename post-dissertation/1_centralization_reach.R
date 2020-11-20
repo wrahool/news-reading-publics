@@ -136,5 +136,5 @@ digital_p = ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=Ty
   labs(x = "log of degree centrality", y = "log of percentage reach") +
   theme(legend.position="right")
 
-plot_grid(regional_p, english_p, digital_p, ncol=1, align="v", labels = c("A", "B", "C"))
+p1 <- plot_grid(regional_p, english_p, digital_p, ncol=1, align="v", labels = c("A", "B", "C"))
 

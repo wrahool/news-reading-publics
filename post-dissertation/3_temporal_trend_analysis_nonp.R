@@ -1,7 +1,8 @@
 library(trend)
 library(tidyverse)
+library(cowplot)
 library(igraph)
-library(gridExtra)
+library(ggplot2)
 
 setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
@@ -47,8 +48,8 @@ nonp_regional_slopes <- sapply(region_res, FUN = function(x) {
 
 regional_plot <- ggplot(nonp_regional_slopes, aes(x = Type, y = Sen.s.slope)) +
   geom_point(size = 4) +
-  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower)) +
-  labs(x = "Media Type", y = "Sen's slope") +
+  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower), size = 1, width = 0.2) +
+  labs(x = "Media Type", y = "Sen's slope for Temporal Change in Percent Reach") +
   lims(y = c(-0.01, 0.01)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   coord_flip() +
@@ -79,8 +80,8 @@ nonp_digital_slopes <- sapply(digital_res, FUN = function(x) {
 
 digital_plot <- ggplot(nonp_digital_slopes, aes(x = Type, y = Sen.s.slope)) +
   geom_point(size = 4) +
-  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower)) +
-  labs(x = "Media Type", y = "Sen's slope") +
+  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower), size = 1, width = 0.2) +
+  labs(x = "Media Type", y = "Sen's slope for Temporal Change in Percent Reach") +
   lims(y = c(-0.01, 0.01)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   coord_flip() +
@@ -113,8 +114,8 @@ nonp_english_slopes <- sapply(english_res, FUN = function(x) {
 
 english_plot <- ggplot(nonp_english_slopes, aes(x = Type, y = Sen.s.slope)) +
   geom_point(size = 4) +
-  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower)) +
-  labs(x = "Media Type", y = "Sen's slope") +
+  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower), size = 1, width = 0.2) +
+  labs(x = "Media Type", y = "Sen's slope for Temporal Change in Percent Reach") +
   lims(y = c(-0.01, 0.01)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   coord_flip() +
@@ -185,8 +186,8 @@ nonp_v2n_slopes <- sapply(vernacular_to_national_mobility_res, FUN = function(x)
 
 v2n_plot <- ggplot(nonp_v2n_slopes, aes(x = Type, y = Sen.s.slope)) +
   geom_point(size = 4) +
-  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower)) +
-  labs(x = "Media Type", y = "Sen's slope") +
+  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower), size = 1, width = 0.2) +
+  labs(x = "Media Type", y = "Sen's slope for Audience Mobility to National Media") +
   lims(y = c(0, 0.22)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   coord_flip() +
@@ -239,13 +240,13 @@ nonp_v2i_slopes <- sapply(vernacular_to_international_mobility_res, FUN = functi
 
 v2i_plot <- ggplot(nonp_v2i_slopes, aes(x = Type, y = Sen.s.slope)) +
   geom_point(size = 4) +
-  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower)) +
-  labs(x = "Media Type", y = "Sen's slope") +
+  geom_errorbar(aes(ymax = ci_upper, ymin = ci_lower), size = 1, width = 0.2) +
+  labs(x = "Media Type", y = "Sen's slope for Audience Mobility to International Media") +
   lims(y = c(0, 0.22)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   coord_flip() +
   theme_bw()
 
-#grid.arrange(regional_plot, digital_plot, english_plot, nrow = 3)
-#grid.arrange(v2n_plot, v2i_plot, nrow = 2)
+sp1 <- plot_grid(regional_plot, digital_plot, english_plot, ncol = 1, align = "v", labels = c("A", "B", "C"))
+sp2 <- plot_grid(v2n_plot, v2i_plot, ncol = 1, align = "v", labels = c("A", "B"))
 
