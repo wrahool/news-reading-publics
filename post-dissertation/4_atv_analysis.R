@@ -172,22 +172,15 @@ regional_atv_trends_p <- ggplot(KM_regional_ATV_trends, aes(x=n, y=MeanATV)) +
   theme_bw()
 
 # model
+regional_main_lm <- lm(MeanATV ~ n + Region, KM_regional_ATV_trends)
+summary(regional_main_lm)
 
-for(r in unique(KM_regional_ATV_trends$Region)) {
-  print(r)
-  lm(MeanATV ~ n, data = KM_regional_ATV_trends[KM_regional_ATV_trends$Region == r,]) %>%
-    summary() %>%
-    print()
-}
-
-lm(MeanATV ~ n + Region, data = KM_regional_ATV_trends) %>%
-  summary() %>%
-  print()
-
+stargazer(regional_lm, national_lm, international_lm)
 # robust
-felm(ATV ~ n + Region | 0 | 0 | Media, KM_ATV_master_df_common_breakdown) %>%
-  summary() %>%
-  print()
+regional_main_felm <- felm(ATV ~ n + Region | 0 | 0 | Media, KM_ATV_master_df_common_breakdown)
+summary(regional_main_felm)
+
+stargazer(regional_main_lm, regional_main_felm)
 
 # English vs Vernavular
 
@@ -204,22 +197,13 @@ language_atv_trends_p <- ggplot(KM_language_ATV_trends, aes(x=n, y=MeanATV)) +
 
 # model
 
-for(l in unique(KM_language_ATV_trends$Language)) {
-  print(l)
-  lm(MeanATV ~ n, data = KM_language_ATV_trends[KM_language_ATV_trends$Language == l,]) %>%
-    summary() %>%
-    print()
-}
+language_lm <- lm(MeanATV ~ n + Language, KM_language_ATV_trends)
+summary(language_lm)
 
-lm(MeanATV ~ n + Language, data = KM_language_ATV_trends) %>%
-  summary() %>%
-  print()
+language_felm <- felm(ATV ~ n + Language | 0 | 0 | Media, KM_ATV_master_df_common_breakdown)
+summary(language_felm)
 
-# robust
-felm(ATV ~ n + Language | 0 | 0 | Media, KM_ATV_master_df_common_breakdown) %>%
-  summary() %>%
-  print()
-
+stargazer(language_lm, language_felm)
 
 # Digital-born vs Legacy
 
@@ -236,21 +220,13 @@ type_atv_trends_p <- ggplot(KM_type_ATV_trends, aes(x=n, y=MeanATV)) +
 
 # model
 
-for(t in unique(KM_type_ATV_trends$Type)) {
-  print(t)
-  lm(MeanATV ~ n, data = KM_type_ATV_trends[KM_type_ATV_trends$Type == t,]) %>%
-    summary() %>%
-    print()
-}
+digital_main_lm <- lm(MeanATV ~ n + Type, data = KM_type_ATV_trends)
+summary(digital_main_lm)
 
-lm(MeanATV ~ n + Type, data = KM_type_ATV_trends) %>%
-  summary() %>%
-  print()
+digital_main_felm <- felm(ATV ~ n + Type | 0 | 0 | Media, KM_ATV_master_df_common_breakdown)
+summary(digital_felm)
 
-# robust
-felm(ATV ~ n + Type | 0 | 0 | Media, KM_ATV_master_df_common_breakdown) %>%
-  summary() %>%
-  print()
+stargazer(digital_main_lm, digital_main_felm)
 
 # Indian digital-born vs Legacy
 
