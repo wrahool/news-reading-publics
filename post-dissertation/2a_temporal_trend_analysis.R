@@ -26,150 +26,55 @@ media_master_breakdown <- KM_master_tbl %>%
   arrange(n, Media)
 
 ###########################################################################################
-# regionwise
-# mean
+######## digital mean
 
-regional_mean_trends <- media_master_breakdown %>%
-  group_by(n, paste0(Regional, Indian)) %>%
-  summarise(MeanPC = mean(PercentReach)) %>%
-  ungroup() %>%
-  rename(Region = 2) %>%
-  mutate(Region = ifelse(Region == "NN", "International", ifelse(Region == "NY", "National", "Regional")))
-
-region_main_mean_lm <- lm(MeanPC ~ n + Region, regional_mean_trends)
-
-national_mean_lm <- lm(MeanPC ~ n, regional_mean_trends[regional_mean_trends$Region == "National",])
-
-international_mean_lm <- lm(MeanPC ~ n, regional_mean_trends[regional_mean_trends$Region == "International",])
-
-regional_mean_lm <- lm(MeanPC ~ n, regional_mean_trends[regional_mean_trends$Region == "Regional",])
-
-stargazer(international_mean_lm, national_mean_lm, regional_mean_lm,
-          align = TRUE,
-          title = "Regression of Mean Percent Reach against Time for Different Types of Media",
-          type = "latex")
-
-# colors: black for non-significant, blue for significant increase, red for significant decrease
-region_mean_plot <- ggplot(regional_mean_trends, aes(x=n, y=MeanPC, color = Region)) +
-  geom_point(color = "black") +
-  scale_color_manual(values = c("National" = "black",
-                                "International" = "royalblue", 
-                                "Regional" = "red")) +
-  facet_grid(~Region) +
-  geom_smooth(method = "lm") +
-  theme_bw() +
-  labs(x = "Month", y = "Mean Percent Reach (%)") +
-  theme(legend.position = "none")
-
-
-# median
-
-regional_median_trends <- media_master_breakdown %>%
-  group_by(n, paste0(Regional, Indian)) %>%
-  summarise(MedianPC = median(PercentReach)) %>%
-  ungroup() %>%
-  rename(Region = 2) %>%
-  mutate(Region = ifelse(Region == "NN", "International", ifelse(Region == "NY", "National", "Regional")))
-
-region_main_median_lm <- lm(MedianPC ~ n + Region, regional_median_trends)
-
-national_median_lm <- lm(MedianPC ~ n, regional_median_trends[regional_median_trends$Region == "National",])
-
-international_median_lm <- lm(MedianPC ~ n, regional_median_trends[regional_median_trends$Region == "International",])
-
-regional_median_lm <- lm(MedianPC ~ n, regional_median_trends[regional_median_trends$Region == "Regional",])
-
-stargazer(international_median_lm, national_median_lm, regional_median_lm, 
-          align = TRUE, type = "latex",
-          title = "OLS regression (with standard errors) of Median Percent Reach against Time for Different Types of Media")
-
-# colors: black for non-significant, blue for significant increase, red for significant decrease
-region_median_plot <- ggplot(regional_median_trends, aes(x=n, y=MedianPC, color = Region)) +
-  geom_point(color = "black") +
-  scale_color_manual(values = c("National" = "black",
-                                "International" = "royalblue", 
-                                "Regional" = "red")) +
-  facet_grid(~Region) +
-  geom_smooth(method = "lm") +
-  theme_bw() +
-  labs(x = "Month", y = "median Percent Reach (%)") +
-  theme(legend.position = "none")
-
-# robust errors, clustered by media type
-
-robust_regional_trends <- media_master_breakdown %>%
-  mutate(Region = paste0(Regional, Indian)) %>%
-  mutate(Region = ifelse(Region == "NN", "International", ifelse(Region == "NY", "National", "Regional")))
-
-main_regional_felm <- felm(PercentReach ~ n + Region | 0 | 0 | Media, robust_regional_trends) %>%
-  summary()
-
-national_felm <- felm(PercentReach ~ n | 0 | 0 | Media, robust_regional_trends[robust_regional_trends$Region == "National",])
-
-regional_felm <- felm(PercentReach ~ n | 0 | 0 | Media, robust_regional_trends[robust_regional_trends$Region == "Regional",])
-regional_felm_2 <- felm(PercentReach ~ n | State | 0 | Media, robust_regional_trends[robust_regional_trends$Region == "Regional",])
-
-international_felm <- felm(PercentReach ~ n | 0 | 0 | Media, robust_regional_trends[robust_regional_trends$Region == "International",])
-
-stargazer(international_felm, national_felm, regional_felm,
-          align = TRUE, type = "latex",
-          title = "OLS regression (with robust errors) of Median Percent Reach against Time for Different Types of Media")
-
-save(region_mean_plot, region_median_plot, file = "04_RData/post-dissertation/region_trends_ggplot.Rdata")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# digital
-
-digital_trends <- media_master_breakdown %>%
+digital_mean_trends <- media_master_breakdown %>%
   group_by(n, Digital) %>%
   summarise(MeanPC = mean(PercentReach)) %>%
   ungroup() %>%
   mutate(Digital = ifelse(Digital == "Y", "Digital-born", "Legacy"))
 
-lm(MeanPC ~ n + as.factor(Digital), digital_trends) %>%
-  summary()
+# digital_main_lm <- lm(MeanPC ~ n + as.factor(Digital), digital_trends)
 
-lm(MeanPC ~ n, digital_trends[digital_trends$Digital == "Digital-born",]) %>%
-  summary()
+digitalborn_mean_lm <- lm(MeanPC ~ n, digital_mean_trends[digital_mean_trends$Digital == "Digital-born",])
 
-lm(MeanPC ~ n, digital_trends[digital_trends$Digital == "Legacy",]) %>%
-  summary()
+legacy_mean_lm <- lm(MeanPC ~ n, digital_mean_trends[digital_mean_trends$Digital == "Legacy",])
 
-digital_plot <- ggplot(digital_trends, aes(x=n, y=MeanPC, color = Digital)) +
+digital_mean_plot <- ggplot(digital_mean_trends, aes(x=n, y=MeanPC, color = Digital)) +
   geom_point(color = "black") +
-  scale_color_manual(values = c("Legacy" = "skyblue", "Digital-born" = "red")) +
+  scale_color_manual(values = c("Legacy" = "black",
+                                "Digital-born" = "red")) +
   facet_grid(~Digital) +
   geom_smooth(method = "lm") +
   theme_bw() +
   labs(x = "Month", y = "Mean Percent Reach (%)") +
   theme(legend.position = "none")
+
+######### digital_median
+
+digital_median_trends <- media_master_breakdown %>%
+  group_by(n, Digital) %>%
+  summarise(MedianPC = median(PercentReach)) %>%
+  ungroup() %>%
+  mutate(Digital = ifelse(Digital == "Y", "Digital-born", "Legacy"))
+
+# digital_main_lm <- lm(MedianPC ~ n + as.factor(Digital), digital_trends)
+
+digitalborn_median_lm <- lm(MedianPC ~ n, digital_median_trends[digital_median_trends$Digital == "Digital-born",])
+
+legacy_median_lm <- lm(MedianPC ~ n, digital_median_trends[digital_median_trends$Digital == "Legacy",])
+
+digital_median_plot <- ggplot(digital_median_trends, aes(x=n, y=MedianPC, color = Digital)) +
+  geom_point(color = "black") +
+  scale_color_manual(values = c("Legacy" = "black",
+                                "Digital-born" = "black")) +
+  facet_grid(~Digital) +
+  geom_smooth(method = "lm") +
+  theme_bw() +
+  labs(x = "Month", y = "Median Percent Reach (%)") +
+  theme(legend.position = "none")
+
+
 
 # robust / clustered
 

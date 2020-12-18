@@ -73,7 +73,7 @@ regional_median_trends <- media_master_breakdown %>%
 
 region_main_median_lm <- lm(MedianPC ~ n + Region, regional_median_trends)
 
-national_median_lm <- lm(MedianPC ~ n, regional_median_trends[regional_median_trends$Region == "National",])
+# national_median_lm <- lm(MedianPC ~ n, regional_median_trends[regional_median_trends$Region == "National",])
 
 international_median_lm <- lm(MedianPC ~ n, regional_median_trends[regional_median_trends$Region == "International",])
 
@@ -101,8 +101,7 @@ robust_regional_trends <- media_master_breakdown %>%
   mutate(Region = paste0(Regional, Indian)) %>%
   mutate(Region = ifelse(Region == "NN", "International", ifelse(Region == "NY", "National", "Regional")))
 
-main_regional_felm <- felm(PercentReach ~ n + Region | 0 | 0 | Media, robust_regional_trends) %>%
-  summary()
+# main_regional_felm <- felm(PercentReach ~ n + Region | 0 | 0 | Media, robust_regional_trends)
 
 national_felm <- felm(PercentReach ~ n | 0 | 0 | Media, robust_regional_trends[robust_regional_trends$Region == "National",])
 
@@ -127,62 +126,6 @@ save(region_mean_plot, region_median_plot, file = "04_RData/post-dissertation/re
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# digital
-
-digital_trends <- media_master_breakdown %>%
-  group_by(n, Digital) %>%
-  summarise(MeanPC = mean(PercentReach)) %>%
-  ungroup() %>%
-  mutate(Digital = ifelse(Digital == "Y", "Digital-born", "Legacy"))
-
-lm(MeanPC ~ n + as.factor(Digital), digital_trends) %>%
-  summary()
-
-lm(MeanPC ~ n, digital_trends[digital_trends$Digital == "Digital-born",]) %>%
-  summary()
-
-lm(MeanPC ~ n, digital_trends[digital_trends$Digital == "Legacy",]) %>%
-  summary()
-
-digital_plot <- ggplot(digital_trends, aes(x=n, y=MeanPC, color = Digital)) +
-  geom_point(color = "black") +
-  scale_color_manual(values = c("Legacy" = "skyblue", "Digital-born" = "red")) +
-  facet_grid(~Digital) +
-  geom_smooth(method = "lm") +
-  theme_bw() +
-  labs(x = "Month", y = "Mean Percent Reach (%)") +
-  theme(legend.position = "none")
-
-# robust / clustered
-
-robust_digital_trends <- media_master_breakdown
-
-felm(PercentReach ~ n + Digital | 0 | 0 | Media, robust_digital_trends) %>%
-  summary()
-
-felm(PercentReach ~ n | 0 | 0 | Media, robust_digital_trends[robust_digital_trends$Digital == "Y",]) %>%
-  summary()
-
-felm(PercentReach ~ n | 0 | 0 | Media, robust_regional_trends[robust_digital_trends$Digital == "N",]) %>%
-  summary()
 
 # english
 
