@@ -1,6 +1,6 @@
 rm(list=ls())
 
-setwd("C:\\Users\\Subhayan\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
+setwd("C:\\Users\\Subhayan Mukerjee\\Google Drive\\Annenberg UPenn\\0 Dissertation Project\\02_ComScoreData\\01_IndiaData\\")
 
 library(igraph)
 library(ggplot2)
@@ -116,7 +116,7 @@ regional_p <- ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=
   geom_point(size = 2, shape = 16) +
   theme_bw()+
   scale_color_brewer(palette="Set1") +
-  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  labs(x = "log(degree centrality)", y = "log(percentage reach)") +
   theme(legend.position="right")
 
 #viz English vs Vernacular
@@ -124,7 +124,7 @@ english_p = ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=La
   geom_point(size = 2, shape = 16) +
   theme_bw()+
   scale_color_manual(values=wes_palette(name="GrandBudapest1"))+
-  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  labs(x = "log(degree centrality)", y = "log(percentage reach)") +
   theme(legend.position="right")
 
 # viz Digital born vs legacy
@@ -133,8 +133,11 @@ digital_p = ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=Ty
   geom_point(size = 2, shape = 16) +
   theme_bw()+
   scale_color_manual(values=wes_palette(name="Royal1"))+
-  labs(x = "log of degree centrality", y = "log of percentage reach") +
+  labs(x = "log(degree centrality)", y = "log(percentage reach)") +
   theme(legend.position="right")
 
-p1 <- plot_grid(regional_p, english_p, digital_p, ncol=1, align="v", labels = c("A", "B", "C"))
+sp1 <- plot_grid(digital_p, regional_p, english_p,
+                 ncol=1,
+                 align="v", 
+                 labels = LETTERS[1:3])
 
