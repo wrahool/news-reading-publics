@@ -102,7 +102,7 @@ pr_density <- ggplot(avg.dc.pr.full.df) +
 avg.dc.pr.full.df <- avg.dc.pr.full.df %>%
   mutate(RegionalIndian = paste0(Regional, Indian)) %>%
   mutate(RegionalIndian = ifelse(RegionalIndian == "NN", "International",
-                                 ifelse(RegionalIndian == "YY", "Vernacular", "National"))) %>%
+                                 ifelse(RegionalIndian == "YY", "Regional", "National"))) %>%
   select(-Regional, -Indian) %>%
   rename(Region = RegionalIndian) %>%
   mutate(English = ifelse(English == "Y", "English",
@@ -111,12 +111,58 @@ avg.dc.pr.full.df <- avg.dc.pr.full.df %>%
   mutate(Digital = ifelse(Digital == "Y", "Digital-born", "Legacy")) %>%
   rename(Type = Digital)
 
+type_p <- avg.dc.pr.full.df %>%
+  ggplot(aes(Type)) +
+  geom_bar(width = 0.4, color = "black", fill = "black") +
+  lims(y = c(0, 130)) +
+  theme_bw()
+
+region_p <- avg.dc.pr.full.df %>%
+  ggplot(aes(Region)) +
+  geom_bar(width = 0.4, color = "black", fill = "black") +
+  lims(y = c(0, 130)) +
+  theme_bw()
+
+language_p <- avg.dc.pr.full.df %>%
+  ggplot(aes(Language)) +
+  geom_bar(width = 0.4, color = "black", fill = "black") +
+  lims(y = c(0, 130)) +
+  theme_bw()
+
+plot_grid(type_p, region_p, language_p, nrow = 1)
+
+# mann whitney 
+wilcox.test(avg.pr ~ Type, data = avg.dc.pr.full.df, paired = FALSE)
+
+#--------------
+
+wilcox.test(avg.pr ~ Region, data = avg.dc.pr.full.df[avg.dc.pr.full.df$Region %in% c("Regional", "National"),], paired = FALSE)
+
+wilcox.test(avg.pr ~ Region, data = avg.dc.pr.full.df[avg.dc.pr.full.df$Region %in% c("Regional", "International"),], paired = FALSE)
+
+wilcox.test(avg.pr ~ Region, data = avg.dc.pr.full.df[avg.dc.pr.full.df$Region %in% c("National", "International"),], paired = FALSE)
+
+#--------------
+
+avg.dc.pr.full.df_temp <- avg.dc.pr.full.df %>%
+  mutate(Language = ifelse(Language == "Both", "English", "Vernacular"))
+
+wilcox.test(avg.dc.pr.full.df_temp[avg.dc.pr.full.df_temp$Language == "Vernacular",]$avg.pr, avg.dc.pr.full.df_temp[avg.dc.pr.full.df_temp$Language == "English",]$avg.pr, paired = FALSE)
+
+wilcox.test(avg.pr ~ Language, data = avg.dc.pr.full.df_temp, paired = FALSE)
+
+
+avg.dc.pr.full.df_temp <- avg.dc.pr.full.df %>%
+  mutate(Language = ifelse(Language == "Both", "Vernacular", "English"))
+
+wilcox.test(avg.dc.pr.full.df_temp[avg.dc.pr.full.df_temp$Language == "Vernacular",]$avg.pr, avg.dc.pr.full.df_temp[avg.dc.pr.full.df_temp$Language == "English",]$avg.pr)
+
 #viz Regional vs National vs International
 regional_p <- ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=Region)) + 
   geom_point(size = 2, shape = 16) +
   theme_bw()+
   scale_color_brewer(palette="Set1") +
-  labs(x = "log(degree centrality)", y = "log(percentage reach)") +
+  labs(x = "log(mean deg. centr.)", y = "log(mean % reach)") +
   theme(legend.position="right")
 
 #viz English vs Vernacular
@@ -124,7 +170,7 @@ english_p = ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=La
   geom_point(size = 2, shape = 16) +
   theme_bw()+
   scale_color_manual(values=wes_palette(name="GrandBudapest1"))+
-  labs(x = "log(degree centrality)", y = "log(percentage reach)") +
+  labs(x = "log(mean deg. centr.)", y = "log(mean % reach)") +
   theme(legend.position="right")
 
 # viz Digital born vs legacy
@@ -133,7 +179,7 @@ digital_p = ggplot(avg.dc.pr.full.df, aes(x=log(avg.dc), y=log(avg.pr), color=Ty
   geom_point(size = 2, shape = 16) +
   theme_bw()+
   scale_color_manual(values=wes_palette(name="Royal1"))+
-  labs(x = "log(degree centrality)", y = "log(percentage reach)") +
+  labs(x = "log(mean deg. centr.)", y = "log(mean % reach)") +
   theme(legend.position="right")
 
 sp1 <- plot_grid(digital_p, regional_p, english_p,

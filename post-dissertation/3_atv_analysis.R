@@ -6,6 +6,7 @@ library(gridExtra)
 library(igraph)
 library(lfe)
 library(ggplot2)
+library(modelsummary)
 
 TI_ATV_df = read_csv("03_Auxiliary/Fall 19/total_internet_atv.csv")
 KM_ATV_master_df = read_csv("03_Auxiliary/Fall 19/km_atv_master.csv")
@@ -42,7 +43,7 @@ scatterplot_tbl <- scatterplot_tbl %>%
   merge(media.breakdown) %>%
   mutate(RegionalIndian = paste0(Regional, Indian)) %>%
   mutate(RegionalIndian = ifelse(RegionalIndian == "NN", "International",
-                                 ifelse(RegionalIndian == "YY", "Vernacular", "National"))) %>%
+                                 ifelse(RegionalIndian == "YY", "Regional", "National"))) %>%
   select(-Regional, -Indian) %>%
   rename(Region = RegionalIndian) %>%
   mutate(English = ifelse(English == "Y", "English",
@@ -56,21 +57,21 @@ scatterplot_tbl <- scatterplot_tbl %>%
 regional_sp <- ggplot(scatterplot_tbl) +
   geom_point(aes(x=log(MeanPR), y=log(ATV), color=Region), size = 2, shape = 16) +
   scale_color_brewer(palette="Set1") +
-  labs(x = "log(mean percent reach)", y = "log(mean avg. time spent / visitor)") +
+  labs(x = "log(mean % reach)", y = "log(mean avg. time \n per visitor)") +
   theme_bw() +
   theme(legend.position="right")
 
 digital_sp <- ggplot(scatterplot_tbl) +
   geom_point(aes(x=log(MeanPR), y=log(ATV), color=Type), size = 2, shape = 16) +
   scale_color_manual(values=wes_palette(name="Royal1")) +
-  labs(x = "log(mean percent reach)", y = "log(mean avg. time spent / visitor)") +
+  labs(x = "log(mean % reach)", y = "log(mean avg. time \n per visitor )") +
   theme_bw() +
   theme(legend.position="right")
 
 language_sp <- ggplot(scatterplot_tbl) +
   geom_point(aes(x=log(MeanPR), y=log(ATV), color=Language), size = 2, shape = 16) +
   scale_color_manual(values=wes_palette(name="GrandBudapest1")) +
-  labs(x = "log(mean percent reach)", y = "log(mean avg. time spent / visitor)") +
+  labs(x = "log(mean % reach)", y = "log(mean avg. time \n per visitor)") +
   theme_bw() +
   theme(legend.position="right")
 
@@ -81,6 +82,32 @@ sp2 <- plot_grid(digital_sp, regional_sp, language_sp,
 
 cor.test(scatterplot_tbl$MeanPR, scatterplot_tbl$ATV, method = "spearman") # 0.276
 cor.test(scatterplot_tbl$MeanPR, scatterplot_tbl$ATV, method = "kendall") # 0.202
+
+# mann whitney 
+wilcox.test(ATV ~ Type, data = scatterplot_tbl, paired = FALSE)
+
+#--------------------
+wilcox.test(ATV ~ Region, data = scatterplot_tbl[scatterplot_tbl$Region %in% c("Regional", "National"),], paired = FALSE)
+
+wilcox.test(ATV ~ Region, data = scatterplot_tbl[scatterplot_tbl$Region %in% c("Regional", "International"),], paired = FALSE)
+
+wilcox.test(ATV ~ Region, data = scatterplot_tbl[scatterplot_tbl$Region %in% c("National", "International"),], paired = FALSE)
+
+wilcox.test(scatterplot_tbl[scatterplot_tbl$Region == "International",]$ATV, scatterplot_tbl[scatterplot_tbl$Region == "National",]$ATV)
+
+#--------------------
+scatterplot_tbl_temp <- scatterplot_tbl %>%
+  mutate(Language = ifelse(Language == "Both", "English", "Vernacular"))
+
+wilcox.test(ATV ~ Language, data = scatterplot_tbl_temp, paired = FALSE)
+
+scatterplot_tbl_temp <- scatterplot_tbl %>%
+  mutate(Language = ifelse(Language == "Both", "Vernacular", "English"))
+
+wilcox.test(scatterplot_tbl[scatterplot_tbl$Language == "English",]$ATV, scatterplot_tbl[scatterplot_tbl$Language == "Vernacular",]$ATV)
+
+
+
 
 ##################################################################
 #monthly ATV trends
@@ -112,7 +139,7 @@ ordered_months %>%
   rename(Month = month) -> ordered_months
 
 KM_ATV_master_df_common_breakdown <- KM_ATV_master_df_common %>%
-  merge(common_nodes_breakdown) %>%
+  merge(media.breakdown) %>%
   mutate(Region = paste0(Indian, English)) %>%
   mutate(Region = ifelse(Region == "YN", "Regional",
                          ifelse(Region == "YY", "National", "International"))) %>%
@@ -151,6 +178,8 @@ regional_median_lm <- lm(MedianATV ~ n * Region, KM_regional_ATV_trends)
 regional_region_median_lm <- lm(MedianATV ~ n, KM_regional_ATV_trends[KM_regional_ATV_trends$Region == "Regional",])
 national_region_median_lm <- lm(MedianATV ~ n, KM_regional_ATV_trends[KM_regional_ATV_trends$Region == "National",])
 international_region_median_lm <- lm(MedianATV ~ n, KM_regional_ATV_trends[KM_regional_ATV_trends$Region == "International",])
+
+f <- function(x) format(round(x, 3), big.mark=",")
 
 modelsummary(list("Median ATV (International)" = international_region_median_lm, "Median ATV (National)" = national_region_median_lm, "Median ATV (Regional)" = regional_region_median_lm),
              fmt = 5,
@@ -260,6 +289,8 @@ type_atv_median_trends_p <- ggplot(KM_type_ATV_trends, aes(x=n, y=MedianATV)) +
   labs(x = "Month", y = expression(atop("Median Average Time Spent", paste("per Visitor per Month (minutes)")))) +
   theme_bw() +
   theme(strip.text.x = element_text(size = 14))
+
+p4 <- plot_grid(type_atv_median_trends_p, regional_median_atv_trends_p, language_atv_median_trends_p, align = "v", labels = LETTERS[1:3], ncol = 1)
 
 # model
 
