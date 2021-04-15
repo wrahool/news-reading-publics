@@ -6,6 +6,7 @@ setwd("C:\\Users\\Subhayan Mukerjee\\Google Drive\\Annenberg UPenn\\0 Dissertati
 library(igraph)
 library(ggplot2)
 library(gridExtra)
+library(aricode)
 
 #load("04_RData/03_filtered_networks.RData")
 #load("04_RData/02_induced_networks.RData")
@@ -27,7 +28,54 @@ get.edge.wt.communities = function(g, c1, c2) {
 #multi-level walktrap without resolution parameter
 set.seed(42)
 WT = cluster_walktrap(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+FG = cluster_fast_greedy(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+ML = cluster_louvain(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+SG = cluster_spinglass(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+LE = cluster_leading_eigen(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+LP = cluster_label_prop(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+IM = cluster_infomap(filtered.master.g, e.weights = E(filtered.master.g)$shared_audience)
+EB = cluster_edge_betweenness(filtered.master.g, weights = E(filtered.master.g)$shared_audience)
+
 modularity(filtered.master.g, membership(WT))
+modularity(filtered.master.g, membership(FG))
+
+CD_df <- cbind(WT$names, WT$membership, FG$membership, ML$membership, SG$membership, LE$membership, LP$membership, IM$membership, EB$membership)
+CD_df <- as.data.frame(CD_df)
+names(CD_df) <- c("Media", "WT", "FG", "ML", "SG", "LE", "LP", "IM", "EB")
+
+CD_df$WT <- as.numeric(CD_df$WT)
+CD_df$FG <- as.numeric(CD_df$FG)
+CD_df$ML <- as.numeric(CD_df$ML)
+CD_df$SG <- as.numeric(CD_df$SG)
+CD_df$LE <- as.numeric(CD_df$LE)
+CD_df$LP <- as.numeric(CD_df$LP)
+CD_df$IM <- as.numeric(CD_df$IM)
+CD_df$EB <- as.numeric(CD_df$EB)
+
+
+media_types <- read.csv("C:/Users/Subhayan Mukerjee/Google Drive/Research Projects/Ongoing/News Reading Publics/Paper1/media_types.csv", as.is = TRUE)
+
+CD_df <- merge(media_types, CD_df)
+
+NMI(CD_df$State, CD_df$WT)
+NMI(CD_df$State, CD_df$FG)
+NMI(CD_df$State, CD_df$ML)
+NMI(CD_df$State, CD_df$SG)
+NMI(CD_df$State, CD_df$LE)
+NMI(CD_df$State, CD_df$LP)
+NMI(CD_df$State, CD_df$IM)
+NMI(CD_df$State, CD_df$EB)
+
+
+NMI(FG$membership, media_types$State)
+
+NMI(WT$membership, FG$membership)
+NMI(WT$membership, ML$membership)
+NMI(WT$membership, SG$membership)
+NMI(WT$membership, LE$membership)
+NMI(WT$membership, LP$membership)
+NMI(WT$membership, IM$membership)
+NMI(WT$membership, EB$membership)
 
 save(WT, file = "04_RData/WT.Rdata")
 # 

@@ -94,6 +94,11 @@ cor.test(avg.dc.pr.df$avg.dc, avg.dc.pr.df$avg.pr, method = "kendall")
 media.breakdown$X = NULL
 avg.dc.pr.full.df = merge(avg.dc.pr.df, media.breakdown, by.x = "Media", by.y = "Media")
 
+# top 10 sites
+avg.dc.pr.full.df %>%
+  arrange(desc(avg.pr)) %>%
+  head(10)
+
 pr_density <- ggplot(avg.dc.pr.full.df) +
   geom_density(aes(avg.pr)) +
   labs(x="Mean Monthly Reach (%)") +
